@@ -228,3 +228,15 @@ body.heat-on.grid-on .fheatlg{bottom:290px}
  body.grid-on.tl-open .ftl{bottom:186px}
  .ffm{padding-left:0}
 }
+
+/* countries sheet */
+.fcsearch{display:block;margin:0 0 8px}
+.fcsearch input{width:100%;box-sizing:border-box;background:rgba(255,255,255,.05);border:1px solid var(--line2);border-radius:10px;color:var(--ink);font:inherit;font-size:16px;padding:8px 10px;outline:none}
+.fcsearch input:focus{border-color:var(--accent)}
+.fcall{width:100%;margin:0 0 8px;padding:8px 10px;border-radius:10px;border:1px solid var(--line2);background:rgba(34,211,238,.1);color:var(--accent);font:inherit;font-weight:600;cursor:pointer}
+.fclist{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.fclist button{width:100%;text-align:left;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--ink);font:inherit;cursor:pointer;transition:background .2s,border-color .2s}
+.fclist button:hover,.fclist button.on{background:rgba(34,211,238,.08);border-color:rgba(34,211,238,.4)}
+.fclist b{font-size:13px;font-weight:600}
+.fclist small{font-size:11px;color:var(--muted)}
+@media (max-width:420px){.fclist{grid-template-columns:1fr}}

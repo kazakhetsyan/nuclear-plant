@@ -26,17 +26,22 @@ var ICON={
  rings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/></svg>',
  compare:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="7" height="14" rx="1.5"/><rect x="14" y="5" width="7" height="14" rx="1.5"/></svg>',
  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>',
+ globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/></svg>',
  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>'
 };
 
 /* ---------- shared data helpers ---------- */
-function unitOn(u,Y){ var c=yr(u.commercial_operation); if(!c||c>Y) return false; var cl=yr(u.closed); return !cl||cl>Y; }
-function openedYear(p){ var ys=p.units.map(function(u){return yr(u.commercial_operation);}).filter(Boolean); return ys.length?Math.min.apply(null,ys):null; }
+function isUS(p){ return !p.country_code||p.country_code==='US'; }
+function placeOf(p){ return isUS(p)?(p.state+', USA'):p.country; }
+function unitSusp(u,Y){ var su=yr(u.suspended_since); return !!su&&su<=Y&&u.status==='Suspended operation'; }
+function unitOn(u,Y){ var c=yr(u.commercial_operation)||yr(u.grid_connection); if(!c||c>Y) return false; if(unitSusp(u,Y)) return false; var cl=yr(u.closed); return !cl||cl>Y; }
+function openedYear(p){ var ys=p.units.map(function(u){return yr(u.commercial_operation)||yr(u.grid_connection);}).filter(Boolean); return ys.length?Math.min.apply(null,ys):null; }
 function opCap(p){ return p.status==='Operating'?num(p.operating_capacity_mw):0; }
 function totalCap(p){ return p.units.reduce(function(a,u){return a+num(u.capacity_mw);},0); }
 function capOf(p){ return opCap(p)||totalCap(p); }
 function vendors(p){ var v=[]; p.units.forEach(function(u){ if(u.vendor&&v.indexOf(u.vendor)<0) v.push(u.vendor); }); return v.join(', '); }
 function licenseInfo(p){
+ if(!isUS(p)) return {kind:'na',text:''};
  var units=p.units.filter(function(u){return u.status==='Operational'&&u.license_expires_year;});
  if(p.status!=='Operating'&&p.status!=='Restart in progress'){
   if(/Shut/.test(p.status)) return {kind:'shut',text:'Shut down: no active operating license'};
@@ -49,7 +54,7 @@ function licenseInfo(p){
 }
 function estimates(p){
  var mw=opCap(p); if(!mw) return null;
- var mwh=mw*8760*0.90; return {mwh:mwh,homes:mwh*1000/10500,co2t:mwh*0.4};
+ var mwh=mw*8760*0.90; return isUS(p)?{mwh:mwh,homes:mwh*1000/10500,co2t:mwh*0.4,us:true}:{mwh:mwh,us:false};
 }
 
 /* ---------- UI scaffolding: toast, sheet, tools ---------- */
@@ -100,12 +105,12 @@ function setToolState(id,on,txt){ var b=items[id]; if(!b) return; b.classList.to
 
 /* ---------- 1. Timeline ---------- */
 var TL={open:false,year:NOW_YEAR,timer:null,bar:null};
-var MIN_YEAR=1957;
+var MIN_YEAR=1954;
 function tlApply(){
  var Y=TL.year;
  APP.extraFilter=TL.open?function(p){ var o=openedYear(p); return !!o&&o<=Y; }:null;
  APP.isGone=TL.open?function(p){ var o=openedYear(p); return !!o&&o<=Y&&!p.units.some(function(u){return unitOn(u,Y);}); }:null;
- APP.statusAt=TL.open?function(p){ if(p.units.some(function(u){return unitOn(u,Y);})) return 'Operating'; var o=openedYear(p); if(o&&o<=Y) return 'Shut down / decommissioned'; return null; }:null;
+ APP.statusAt=TL.open?function(p){ if(p.units.some(function(u){return unitOn(u,Y);})) return 'Operating'; if(p.units.some(function(u){return unitSusp(u,Y);})) return 'Suspended operation'; var o=openedYear(p); if(o&&o<=Y) return 'Shut down / decommissioned'; return null; }:null;
  APP.countOverride=TL.open?function(vis){
   var online=0,reactors=0; vis.forEach(function(m){ var on=m.plant.units.filter(function(u){return unitOn(u,Y);}).length; if(on){online++;reactors+=on;} });
   return '<b>'+online+'</b> plants online in <b>'+Y+'</b> · <b>'+reactors+'</b> reactors';
@@ -148,7 +153,7 @@ function showNearest(lat,lon){
  meLayer=L.layerGroup([L.circleMarker([lat,lon],{radius:7,color:'#fff',weight:2,fillColor:'#22d3ee',fillOpacity:1,className:'fme'}).bindTooltip('You are here',{direction:'top'})]).addTo(APP.map);
  var html='<p class="fnote">Closest plants to your location (straight-line distance). Your location stays on this device.</p><ol class="fnear">'+list.map(function(o){
   var s=APP.STATUS[o.p.status];
-  return '<li><button type="button" data-id="'+esc(o.p.id)+'"><span class="dot" style="background:'+s.hex+';color:'+s.hex+'"></span><span class="fn1"><b>'+esc(o.p.name)+'</b><small>'+esc(o.p.state)+' · '+esc(o.p.status)+'</small></span><span class="fn2">'+(o.km/1.609344).toFixed(o.km<160?1:0)+' mi<small>'+o.km.toFixed(o.km<100?1:0)+' km</small></span></button></li>';
+  return '<li><button type="button" data-id="'+esc(o.p.id)+'"><span class="dot" style="background:'+s.hex+';color:'+s.hex+'"></span><span class="fn1"><b>'+esc(o.p.name)+'</b><small>'+esc(placeOf(o.p))+' · '+esc(o.p.status)+'</small></span><span class="fn2">'+(o.km/1.609344).toFixed(o.km<160?1:0)+' mi<small>'+o.km.toFixed(o.km<100?1:0)+' km</small></span></button></li>';
  }).join('')+'</ol>';
  var b=openSheet('Nearest plants',html,'near');
  Array.prototype.forEach.call(b.querySelectorAll('button[data-id]'),function(btn){ btn.addEventListener('click',function(){ closeSheet(); window.selectPlant(btn.dataset.id); }); });
@@ -200,28 +205,82 @@ function donut(rows){
  return '<div class="fdonut"><svg viewBox="0 0 120 120" width="120" height="120"><g transform="rotate(-90 60 60)">'+segs+'</g><text x="60" y="58" text-anchor="middle" class="fdn">'+tot+'</text><text x="60" y="74" text-anchor="middle" class="fdl">plants</text></svg><ul>'+rows.map(function(r){return '<li><span class="dot" style="background:'+r[2]+';color:'+r[2]+'"></span>'+esc(r[0])+'<b>'+r[1]+'</b></li>';}).join('')+'</ul></div>';
 }
 function openStats(){
- var P=APP.plants, byState={}, byType={}, byDec={}, bySt={};
+ var P=APP.plants, byState={}, byCountry={}, byType={}, byDec={}, bySt={}, countries={};
+ var TC={PWR:'#22d3ee',BWR:'#a78bfa',PHWR:'#fbbf24',LWGR:'#f87171',GCR:'#fb923c',FBR:'#34d399',HTGR:'#f472b6'};
  P.forEach(function(p){
-  var c=opCap(p); if(c) byState[p.state]=(byState[p.state]||0)+c;
+  var c=opCap(p), cn=p.country||'United States';
+  countries[cn]=1;
+  if(c){ byCountry[cn]=(byCountry[cn]||0)+c; if(isUS(p)) byState[p.state]=(byState[p.state]||0)+c; }
   p.units.forEach(function(u){ if(u.status==='Operational'){ var t=u.type||'Other'; byType[t]=(byType[t]||0)+1; } });
   var o=openedYear(p)||p.first_commercial_year; if(o){ var d=Math.floor(o/10)*10; byDec[d]=(byDec[d]||0)+1; }
   bySt[p.status]=(bySt[p.status]||0)+1;
  });
+ var ctry=Object.keys(byCountry).map(function(k){return [k,byCountry[k],k==='United States'?'#60a5fa':'#34d399'];}).sort(function(a,b){return b[1]-a[1];}).slice(0,12);
  var states=Object.keys(byState).map(function(k){return [k,byState[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
- var types=Object.keys(byType).map(function(k){return [k,byType[k],k==='PWR'?'#22d3ee':k==='BWR'?'#a78bfa':'#94a3b8'];}).sort(function(a,b){return b[1]-a[1];});
+ var types=Object.keys(byType).map(function(k){return [k,byType[k],TC[k]||'#94a3b8'];}).sort(function(a,b){return b[1]-a[1];});
  var decs=Object.keys(byDec).sort().map(function(k){return [k+'s',byDec[k],'#34d399'];});
  var sts=Object.keys(APP.STATUS).filter(function(k){return bySt[k];}).map(function(k){return [k,bySt[k],APP.STATUS[k].hex];});
  var byBA={}; P.forEach(function(p){ var g=gridOf(p), c=opCap(p); if(g&&c){ var k=g.rto||g.ba_name; byBA[k]=(byBA[k]||0)+c; } });
  var gridBars=Object.keys(byBA).map(function(k){return [k,byBA[k],RTO[k]?RTO[k].c:'#94a3b8'];}).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
- var totalOp=P.reduce(function(a,p){return a+opCap(p);},0), reactors=P.reduce(function(a,p){return a+p.units.filter(function(u){return u.status==='Operational';}).length;},0);
- var html='<div class="fkpis"><div><b>'+fmt(totalOp/1000)+' GW</b><small>operating capacity</small></div><div><b>'+reactors+'</b><small>operating reactors</small></div><div><b>'+Object.keys(byState).length+'</b><small>states with plants</small></div></div>'+
-  '<h4>Operating capacity by state · top 10</h4>'+bars(states,{fmt:function(v){return fmt(v)+' MW';}})+
+ var opUnits=function(p){ return p.units.filter(function(u){return u.status==='Operational';}).length; };
+ var totalOp=P.reduce(function(a,p){return a+opCap(p);},0), reactors=P.reduce(function(a,p){return a+opUnits(p);},0);
+ var nC=Object.keys(countries).length, world=nC>1;
+ var html='<div class="fkpis"><div><b>'+fmt(totalOp/1000)+' GW</b><small>operating capacity</small></div><div><b>'+reactors+'</b><small>operating reactors</small></div><div><b>'+(world?Object.keys(byCountry).length:Object.keys(byState).length)+'</b><small>'+(world?'countries operating':'states with plants')+'</small></div></div>'+
+  (world?'<h4>Operating capacity by country · top 12</h4>'+bars(ctry,{fmt:function(v){return (v/1000).toFixed(1)+' GW';}}):'')+
   '<div class="fgrid2"><div><h4>Operating reactors by type</h4>'+bars(types)+'</div><div><h4>Plant status</h4>'+donut(sts)+'</div></div>'+
-  (gridBars.length?'<h4>Operating nuclear capacity by grid operator</h4>'+bars(gridBars,{fmt:function(v){return fmt(v)+' MW';}}):'')+
-  '<h4>Plants by decade of first commercial operation</h4>'+bars(decs)+
-  '<p class="fnote">Based on the map dataset ('+P.length+' plant sites). Capacity is net MW of currently operating plants.</p>';
- openSheet('Fleet statistics',html,'stats');
+  '<h4>US capacity by state · top 10</h4>'+bars(states,{fmt:function(v){return fmt(v)+' MW';}})+
+  (gridBars.length?'<h4>US nuclear capacity by grid operator</h4>'+bars(gridBars,{fmt:function(v){return fmt(v)+' MW';}}):'')+
+  '<h4>Plants by decade of first power</h4>'+bars(decs)+
+  '<p class="fnote">Based on the map dataset ('+P.length+' plant sites in '+nC+' countries). Capacity is net MW of reactors operating today; idle reactors (e.g. most of Japan’s, “Suspended operation”) are not counted. Non-US data: IAEA PRIS.</p>';
+ openSheet(world?'World statistics':'Fleet statistics',html,'stats');
 }
+
+/* ---------- Countries: filter + zoom ---------- */
+var CTRY={name:null,chip:null};
+function countryRows(){
+ var m={};
+ APP.plants.forEach(function(p){ var c=p.country||'United States'; var r=m[c]||(m[c]={name:c,sites:0,op:0,mw:0}); r.sites++; r.op+=p.units.filter(function(u){return u.status==='Operational';}).length; r.mw+=opCap(p); });
+ return Object.keys(m).map(function(k){return m[k];}).sort(function(a,b){ return b.op-a.op||b.sites-a.sites||(a.name<b.name?-1:1); });
+}
+function countryChip(){
+ var qv=document.querySelector('.qview'); if(!qv) return;
+ if(!CTRY.chip){ CTRY.chip=el('button','qchip'); CTRY.chip.type='button'; qv.appendChild(CTRY.chip); CTRY.chip.addEventListener('click',function(){ countryClear(); }); }
+ CTRY.chip.innerHTML=CTRY.name?esc(CTRY.name)+' <span aria-hidden="true">×</span>':'';
+ CTRY.chip.setAttribute('aria-label',CTRY.name?'Clear country filter ('+CTRY.name+')':'');
+ CTRY.chip.style.display=CTRY.name?'':'none';
+}
+function countryFit(name){
+ if(name==='United States'&&APP.USA_B){ APP.map.flyToBounds(APP.USA_B,{duration:APP.REDUCED?0:1.2,animate:!APP.REDUCED,paddingTopLeft:[0,isMobile()?150:60]}); return; }
+ var pts=APP.plants.filter(function(p){return (p.country||'United States')===name;}).map(function(p){return [p.lat,p.lon];});
+ if(!pts.length) return;
+ var b=L.latLngBounds(pts);
+ APP.map.flyToBounds(b,{maxZoom:7,duration:APP.REDUCED?0:1.2,animate:!APP.REDUCED,paddingTopLeft:[30,isMobile()?160:80],paddingBottomRight:[30,isMobile()?40:30]});
+}
+function countrySet(name,fit){
+ CTRY.name=name||null;
+ APP.filters=APP.filters||{};
+ APP.filters.country=CTRY.name?function(p){ return (p.country||'United States')===CTRY.name; }:null;
+ APP.applyFilters(); setToolState('country',!!CTRY.name,CTRY.name||''); countryChip();
+ if(CTRY.name&&fit!==false) countryFit(CTRY.name);
+}
+function countryClear(quiet){ if(!CTRY.name) return; countrySet(null,false); if(!quiet&&APP.goWorld) APP.goWorld(!APP.REDUCED); }
+function openCountries(){
+ var rows=countryRows();
+ var html='<label class="fcsearch"><input type="search" placeholder="Filter '+rows.length+' countries…" aria-label="Filter countries" autocomplete="off"></label>'+
+  (CTRY.name?'<button type="button" class="fcall">Show all countries</button>':'')+
+  '<ul class="fclist">'+rows.map(function(r){ return '<li><button type="button" data-c="'+esc(r.name)+'" class="'+(CTRY.name===r.name?'on':'')+'"><b>'+esc(r.name)+'</b><small>'+r.sites+' site'+(r.sites>1?'s':'')+' · '+r.op+' operating reactor'+(r.op===1?'':'s')+(r.mw?' · '+(r.mw/1000).toFixed(1)+' GW':'')+'</small></button></li>'; }).join('')+'</ul>'+
+  '<p class="fnote">Tap a country to show only its plants and zoom to them. Sorted by operating reactors. Source: IAEA PRIS (non-US), NRC/EIA (US).</p>';
+ var body=openSheet('Countries',html,'countries');
+ var inp=$('input',body);
+ inp.addEventListener('input',function(){ var q=inp.value.trim().toLowerCase(); Array.prototype.forEach.call(body.querySelectorAll('.fclist li'),function(li){ li.style.display=!q||li.textContent.toLowerCase().indexOf(q)>=0?'':'none'; }); });
+ body.addEventListener('click',function(e){
+  var b=e.target.closest?e.target.closest('button'):null; if(!b) return;
+  if(b.classList.contains('fcall')){ closeSheet(); countryClear(); return; }
+  var c=b.getAttribute('data-c'); if(!c) return;
+  closeSheet(); APP.closePanel(); safe('country',function(){ countrySet(c); });
+ });
+}
+APP.country={set:countrySet,clear:countryClear,open:openCountries};
 
 /* ---------- 8. Tour ---------- */
 var TOUR={on:false,paused:false,i:0,list:[],t:null,card:null};
@@ -241,7 +300,7 @@ function tourShow(p,idx){
  var c=tourCard(), e=estimates(p);
  var facts=[p.num_units+' reactor'+(p.num_units>1?'s':''), fmt(opCap(p))+' MW'];
  if(p.first_commercial_year) facts.push('since '+p.first_commercial_year);
- $('.ftc',c).innerHTML='<small>Tour · '+(idx+1)+' of '+TOUR.list.length+'</small><b>'+esc(p.name)+'</b><span>'+esc(p.state)+' · '+esc(facts.join(' · '))+'</span>'+(e?'<em>≈ '+big(e.homes)+' homes powered (est.)</em>':'');
+ $('.ftc',c).innerHTML='<small>Tour · '+(idx+1)+' of '+TOUR.list.length+'</small><b>'+esc(p.name)+'</b><span>'+esc(placeOf(p))+' · '+esc(facts.join(' · '))+'</span>'+(e&&e.us?'<em>≈ '+big(e.homes)+' homes powered (est.)</em>':e?'<em>≈ '+(e.mwh/1e6).toFixed(1)+' TWh/yr at 90% capacity factor (est.)</em>':'');
  $('.ftp',c).textContent=TOUR.paused?'Resume':'Pause';
  var bar=$('.ftbar i',c); bar.style.animation='none'; void bar.offsetWidth; bar.style.animation=TOUR.paused?'none':''; bar.style.animationDuration=TOUR.dwell+'ms';
  c.classList.toggle('paused',TOUR.paused);
@@ -283,7 +342,7 @@ function ringsOn(p){
  var c10=L.circle([p.lat,p.lon],{radius:10*mi,color:'#22d3ee',weight:1.6,opacity:0.95,fillColor:'#22d3ee',fillOpacity:0.08,interactive:false});
  var lab=function(latlng,txt,cls){ return L.marker(latlng,{interactive:false,keyboard:false,icon:L.divIcon({className:'fringlbl '+cls,html:'<span>'+txt+'</span>',iconSize:null})}); };
  var dLat=function(miles){ return miles*mi/111320; };
- RINGS.layer=L.layerGroup([c50,c10,lab([p.lat+dLat(50),p.lon],'50-mile ingestion pathway EPZ','r50'),lab([p.lat+dLat(10),p.lon],'10-mile plume exposure EPZ','r10')]).addTo(APP.map);
+ RINGS.layer=L.layerGroup([c50,c10,lab([p.lat+dLat(50),p.lon],isUS(p)?'50-mile ingestion pathway EPZ':'50 miles (80 km)','r50'),lab([p.lat+dLat(10),p.lon],isUS(p)?'10-mile plume exposure EPZ':'10 miles (16 km)','r10')]).addTo(APP.map);
  RINGS.pid=p.id;
  var b=$('#pbody .fa-rings'); if(b) b.classList.add('on'); var n=$('#pbody .fringnote'); if(n) n.classList.add('show');
  var bounds=c50.getBounds();
@@ -295,7 +354,7 @@ function copyText(t){
  return new Promise(function(res,rej){ try{ var ta=el('textarea'); ta.value=t; ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0,t.length); var ok=document.execCommand('copy'); document.body.removeChild(ta); ok?res():rej(new Error('copy failed')); }catch(e){ rej(e); } });
 }
 function share(p){
- var url=shareUrl(p), data={title:p.name+' – US Nuclear Power Plants',text:p.name+' ('+p.state+') on the US nuclear power plants map',url:url};
+ var url=shareUrl(p), data={title:p.name+' – World Nuclear Power Plants',text:p.name+' ('+placeOf(p)+') on the world nuclear power plants map',url:url};
  if(navigator.share){ navigator.share(data).catch(function(err){ if(err&&err.name==='AbortError') return; copyText(url).then(function(){toast('Link copied');},function(){toast(url,6000);}); }); return; }
  copyText(url).then(function(){ toast('Link copied: #'+p.id); },function(){ toast(url,6000); });
 }
@@ -308,14 +367,14 @@ function compareRows(a){
   'Reactor units':String(a.num_units),
   'Technology':esc(a.reactor_types.join(' + '))||'—',
   'Vendor':esc(vendors(a))||'—',
-  'License expires':li.kind==='ok'?(li.first===li.last?li.first:li.first+'–'+li.last):'<small>'+esc(li.text)+'</small>',
-  'Feeds (grid)':gridOf(a)?esc(gridOf(a).ba_name)+' <small>('+esc(gridOf(a).interconnection)+')</small>':'<small>Not in EIA-860</small>',
-  'State':esc(a.state)
+  'License expires':li.kind==='na'?'<small>US (NRC) plants only</small>':li.kind==='ok'?(li.first===li.last?li.first:li.first+'–'+li.last):'<small>'+esc(li.text)+'</small>',
+  'Feeds (grid)':gridOf(a)?esc(gridOf(a).ba_name)+' <small>('+esc(gridOf(a).interconnection)+')</small>':'<small>'+(isUS(a)?'Not in EIA-860':'US plants only')+'</small>',
+  'Location':esc(placeOf(a))
  };
 }
 function openCompare(p,otherId){
  var opts=APP.plants.filter(function(x){return x.id!==p.id;}).sort(function(a,b){return a.name.localeCompare(b.name);});
- var html='<label class="fpick"><span>Compare <b>'+esc(p.name)+'</b> with</span><select><option value="">Choose a plant…</option>'+opts.map(function(x){return '<option value="'+esc(x.id)+'"'+(x.id===otherId?' selected':'')+'>'+esc(x.name)+' ('+esc(x.state_abbr||x.state)+')</option>';}).join('')+'</select></label><div class="fcmp"></div>';
+ var html='<label class="fpick"><span>Compare <b>'+esc(p.name)+'</b> with</span><select><option value="">Choose a plant…</option>'+opts.map(function(x){return '<option value="'+esc(x.id)+'"'+(x.id===otherId?' selected':'')+'>'+esc(x.name)+' ('+esc(isUS(x)?(x.state_abbr||x.state)+', US':x.country)+')</option>';}).join('')+'</select></label><div class="fcmp"></div>';
  var b=openSheet('Compare plants',html,'cmp');
  var sel=$('select',b), box=$('.fcmp',b);
  function draw(){
@@ -336,9 +395,9 @@ function panelExtras(p){
  safe('actions',function(){
   var sub=$('.sub',pc); if(!sub) return;
   var acts=el('div','facts-acts');
-  acts.innerHTML='<button type="button" class="fa fa-rings">'+ICON.rings+'<span>EPZ rings</span></button><button type="button" class="fa fa-cmp">'+ICON.compare+'<span>Compare</span></button><button type="button" class="fa fa-share">'+ICON.share+'<span>Share</span></button>';
+  acts.innerHTML='<button type="button" class="fa fa-rings">'+ICON.rings+'<span>'+(isUS(p)?'EPZ rings':'10/50 mi rings')+'</span></button><button type="button" class="fa fa-cmp">'+ICON.compare+'<span>Compare</span></button><button type="button" class="fa fa-share">'+ICON.share+'<span>Share</span></button>';
   sub.parentNode.insertBefore(acts,sub.nextSibling);
-  var note=el('div','fringnote','<span class="k10"></span>10-mile <b>plume exposure pathway EPZ</b> · <span class="k50"></span>50-mile <b>ingestion pathway EPZ</b>. These are NRC emergency <i>planning</i> zones used for preparedness, not danger zones. <a href="https://www.nrc.gov/about-nrc/emerg-preparedness/about-emerg-preparedness/planning-zones.html" target="_blank" rel="noopener">NRC ↗</a>');
+  var note=el('div','fringnote',!isUS(p)?'<span class="k10"></span>10 mi (16 km) · <span class="k50"></span>50 mi (80 km) distance rings, for scale only. They use the US NRC planning-zone distances; emergency planning zones in '+esc(p.country)+' are set by its own regulator and may differ.':'<span class="k10"></span>10-mile <b>plume exposure pathway EPZ</b> · <span class="k50"></span>50-mile <b>ingestion pathway EPZ</b>. These are NRC emergency <i>planning</i> zones used for preparedness, not danger zones. <a href="https://www.nrc.gov/about-nrc/emerg-preparedness/about-emerg-preparedness/planning-zones.html" target="_blank" rel="noopener">NRC ↗</a>');
   acts.parentNode.insertBefore(note,acts.nextSibling);
   $('.fa-rings',acts).addEventListener('click',function(){ safe('rings',function(){ RINGS.pid===p.id?ringsOff():ringsOn(p); }); });
   $('.fa-cmp',acts).addEventListener('click',function(){ safe('compare',function(){ openCompare(p); }); });
@@ -350,7 +409,7 @@ function panelExtras(p){
  safe('feeds',function(){ var a=$('.fringnote',pc)||$('.facts-acts',pc)||$('.sub',pc); if(a) gridFeedsBox(p,a); });
  // license countdown
  safe('license',function(){
-  var li=licenseInfo(p), box=el('div','flic');
+  var li=licenseInfo(p); if(li.kind==='na') return; var box=el('div','flic');
   if(li.kind==='ok'){
    var left=li.left, cls=left<=3?'u3':left<=10?'u2':'u1', pct=Math.max(3,Math.min(100,left/40*100));
    var lbl=left>0?left+' year'+(left===1?'':'s')+' left':left===0?'Expires this year':'Listed expiry has passed';
@@ -364,6 +423,12 @@ function panelExtras(p){
  safe('funfacts',function(){
   var e=estimates(p); if(!e) return;
   var box=el('div','ffun');
+  if(!e.us){
+   box.innerHTML='<div class="ffh"><span>Estimated yearly generation</span><details><summary aria-label="Assumptions">ⓘ Assumptions</summary><p>An estimate, not a reported figure: net capacity (IAEA PRIS) × 8,760 h × 90% capacity factor. Real output varies by country and year. Homes-powered and CO₂ figures are shown for US plants only, because they rely on US household use and US grid emissions (EIA).</p></details></div>'+
+    '<div class="ffg"><div><b>≈ '+(e.mwh/1e6).toFixed(1)+' TWh</b><small>generation / yr</small></div><div><b>'+fmt(opCap(p))+' MW</b><small>operating net capacity</small></div></div>';
+   box.title='Estimate: '+fmt(opCap(p))+' MW × 8,760 h × 0.90';
+   anchor.parentNode.insertBefore(box,anchor.nextSibling); return;
+  }
   box.innerHTML='<div class="ffh"><span>Estimated yearly impact</span><details><summary aria-label="Assumptions">ⓘ Assumptions</summary><p>Estimates, not reported figures. Annual generation = net capacity × 8,760 h × 90% capacity factor (US nuclear fleet average, EIA). Homes = generation ÷ 10,500 kWh, the average annual US household use (EIA). CO₂ avoided = generation × 0.4 kg/kWh, roughly the average US grid emission rate (EIA: ~0.37 kg/kWh in 2023); replacing only fossil generation would avoid more, so this is conservative. Sources in “About & sources”.</p></details></div>'+
    '<div class="ffg"><div><b>≈ '+big(e.homes)+'</b><small>homes powered</small></div><div><b>≈ '+big(e.co2t)+' t</b><small>CO₂ avoided / yr</small></div><div><b>≈ '+(e.mwh/1e6).toFixed(1)+' TWh</b><small>generation / yr</small></div></div>';
   box.title='Estimate: '+fmt(opCap(p))+' MW × 8,760 h × 0.90; 10,500 kWh/home/yr; 0.4 kg CO₂/kWh';
@@ -443,6 +508,8 @@ function gridLegend(){
 function gridToggle(on){
  GRID.on=on; setToolState('grid',on);
  document.body.classList.toggle('grid-on',on);
+ // the grid regions are US-only: bring the US into view if the map is showing elsewhere
+ if(on&&APP.USA_B){ var vb=APP.map.getBounds(); if(APP.map.getZoom()<3||!vb.intersects(APP.USA_B)) APP.map.flyToBounds(APP.USA_B,{duration:APP.REDUCED?0:1.1,animate:!APP.REDUCED,paddingTopLeft:[0,isMobile()?150:60]}); }
  if(!on){
   if(GRID.layer){ APP.map.removeLayer(GRID.layer); APP.map.removeLayer(GRID.labels); }
   if(GRID.filter) gridFilter(null);
@@ -478,7 +545,7 @@ APP.grid={toggle:gridToggle,filter:gridFilter,stats:regionStats};
 /* ---------- about: assumptions & sources ---------- */
 function aboutExtras(){
  var ab=document.getElementById('aboutBox'); if(!ab||ab.querySelector('.fabout')) return;
- var d=el('div','fabout','<b>Estimates &amp; zones</b><ul style="padding-left:18px;margin:4px 0"><li>Homes powered / CO₂ avoided are estimates: capacity × 8,760 h × 90% capacity factor; 10,500 kWh per home per year; 0.4 kg CO₂ per kWh.</li><li><a href="https://www.eia.gov/tools/faqs/faq.php?id=97&amp;t=3" target="_blank" rel="noopener">EIA – average US household electricity use</a></li><li><a href="https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=epmt_6_07_b" target="_blank" rel="noopener">EIA – capacity factors by fuel (nuclear ≈ 90%+)</a></li><li><a href="https://www.eia.gov/tools/faqs/faq.php?id=74&amp;t=11" target="_blank" rel="noopener">EIA – CO₂ emitted per kWh of US electricity</a></li><li><a href="https://www.nrc.gov/about-nrc/emerg-preparedness/about-emerg-preparedness/planning-zones.html" target="_blank" rel="noopener">NRC – emergency planning zones (10-mile and 50-mile)</a></li></ul><b>Grid operators</b><ul style="padding-left:18px;margin:4px 0"><li>“Feeds” = the plant’s balancing authority from the <a href="https://www.eia.gov/electricity/data/eia860/" target="_blank" rel="noopener">EIA-860 Plant file</a> (2025 data; 2013–2021 files for plants retired since). Plants that closed before EIA began reporting balancing authorities (2013) show no grid.</li><li>ISO/RTO regions: <a href="https://www.pasda.psu.edu/uci/DataSummary.aspx?dataset=9103" target="_blank" rel="noopener">HIFLD Independent System Operators</a> (Oak Ridge National Laboratory, 2020 boundaries), simplified. Boundaries are approximate service areas.</li></ul>');
+ var d=el('div','fabout','<b>Estimates &amp; zones</b><ul style="padding-left:18px;margin:4px 0"><li>Homes powered / CO₂ avoided are estimates: capacity × 8,760 h × 90% capacity factor; 10,500 kWh per home per year; 0.4 kg CO₂ per kWh. They are shown for US plants only; plants elsewhere show just the generation estimate (same 90% assumption).</li><li>License countdowns are US-only (NRC data). Outside the US, the 10/50-mile rings are drawn at the US distances for scale only.</li><li><a href="https://www.eia.gov/tools/faqs/faq.php?id=97&amp;t=3" target="_blank" rel="noopener">EIA – average US household electricity use</a></li><li><a href="https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=epmt_6_07_b" target="_blank" rel="noopener">EIA – capacity factors by fuel (nuclear ≈ 90%+)</a></li><li><a href="https://www.eia.gov/tools/faqs/faq.php?id=74&amp;t=11" target="_blank" rel="noopener">EIA – CO₂ emitted per kWh of US electricity</a></li><li><a href="https://www.nrc.gov/about-nrc/emerg-preparedness/about-emerg-preparedness/planning-zones.html" target="_blank" rel="noopener">NRC – emergency planning zones (10-mile and 50-mile)</a></li></ul><b>World data</b><ul style="padding-left:18px;margin:4px 0"><li>Non-US reactors (name, type, model, supplier, net MW, dates, status) from <a href="https://pris.iaea.org/" target="_blank" rel="noopener">IAEA PRIS</a>, grouped into sites. “Suspended operation” is PRIS’s status for reactors that are idle but not closed (most are in Japan).</li><li>Site coordinates cross-checked between <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> (ODbL), Wikipedia and <a href="https://github.com/cristianst85/GeoNuclearData" target="_blank" rel="noopener">GeoNuclearData</a> (ODbL).</li><li>Descriptions and photos: English Wikipedia lead text and its freely licensed Wikimedia Commons lead image; otherwise an Esri satellite view.</li></ul><b>Grid operators</b><ul style="padding-left:18px;margin:4px 0"><li>“Feeds” = the plant’s balancing authority from the <a href="https://www.eia.gov/electricity/data/eia860/" target="_blank" rel="noopener">EIA-860 Plant file</a> (2025 data; 2013–2021 files for plants retired since). Plants that closed before EIA began reporting balancing authorities (2013) show no grid.</li><li>ISO/RTO regions: <a href="https://www.pasda.psu.edu/uci/DataSummary.aspx?dataset=9103" target="_blank" rel="noopener">HIFLD Independent System Operators</a> (Oak Ridge National Laboratory, 2020 boundaries), simplified. Boundaries are approximate service areas.</li></ul>');
  var note=ab.querySelector('.note'); ab.insertBefore(d,note||null);
 }
 
@@ -486,6 +553,7 @@ function aboutExtras(){
 function init(){
  safe('tools',buildTools);
  safe('tools-items',function(){
+  addTool('country',ICON.globe,'Countries',openCountries);
   addTool('timeline',ICON.time,'Timeline',function(){ tlOpen(!TL.open); });
   addTool('near',ICON.loc,'Nearest to me',locate);
   addTool('heat',ICON.heat,'Heat map',function(){ heatToggle(!HEAT.on); });
