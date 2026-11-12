@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="vendor/MarkerCluster.css">
 <style>
 :root{
 --bg:#07090d;--surface:rgba(14,18,26,.78);--glass:rgba(13,17,25,.62);--glass-strong:rgba(13,17,25,.78);
@@ -91,6 +91,8 @@ header h1 .sym{display:inline-grid;place-items:center;width:26px;height:26px;bor
 .dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none;box-shadow:0 0 8px 1px currentColor;transition:box-shadow .25s}
 .legend .n{color:var(--faint);margin-left:auto;padding-left:10px;font-variant-numeric:tabular-nums}
 .legend .note{color:var(--faint)}
+.lgdone{display:none;width:100%;margin-top:10px;height:34px;border-radius:9px;border:1px solid var(--accent-line);background:var(--accent-soft);color:var(--accent-ink);font:inherit;font-size:12.5px;font-weight:600;letter-spacing:.02em;cursor:pointer;transition:background .2s,transform .2s var(--ease)}
+.lgdone:active{transform:scale(.97)}
 /* markers */
 .pw{position:relative;width:100%;height:100%}
 .pm{position:relative;width:100%;height:100%;border-radius:50%;display:grid;place-items:center;color:#06120d;font-weight:700;font-size:10px;background:var(--c);
@@ -198,6 +200,8 @@ h3:after{content:"";flex:1;height:1px;background:var(--line)}
  #panel .grab{display:block;position:absolute;top:0;left:0;right:0;height:28px;z-index:6;cursor:grab;touch-action:none}
  #panel .grab:after{content:"";position:absolute;top:9px;left:50%;width:40px;height:4px;margin-left:-20px;border-radius:9px;background:rgba(255,255,255,.55);box-shadow:0 0 10px rgba(34,211,238,.4)}
  .legend{font-size:12px;padding:8px 10px;min-width:0}
+ .lgdone{display:block}
+ .legend:not(.collapsed){min-width:230px}
  #about{bottom:22px;left:8px}
  .pc{padding:12px 16px 28px}
 }
@@ -221,11 +225,41 @@ h3:after{content:"";flex:1;height:1px;background:var(--line)}
   <div id="about"><button id="aboutBtn" class="glass">About &amp; sources</button><div id="aboutBox"></div></div>
  </div>
 </div>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin=""></script>
-<script src="data.js"></script>
+<script src="vendor/leaflet.js"></script>
+<script>window.L||document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>');</script>
+<script src="vendor/leaflet.markercluster.js"></script>
+<script>(window.L&&L.markerClusterGroup)||document.write('<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"><\/script>');</script>
+<script src="data.js?v=20261112b"></script>
 <script>
+// ---- boot: make sure the data is present before starting; never leave the map silently empty ----
 (function(){
+ var tries=0;
+ function showError(msg){
+  var c=document.getElementById('count'); if(c) c.innerHTML='<span style="color:#fca5a5">'+msg+'</span> <a href="#" id="retryLoad" style="color:#67e8f9">Retry</a>';
+  var r=document.getElementById('retryLoad'); if(r) r.onclick=function(e){e.preventDefault();location.reload();};
+ }
+ function go(){
+  if(!window.L){ showError('Map library failed to load.'); return; }
+  try{ startApp(window.PLANTS); }catch(err){ console.error('startApp failed',err); showError('Map failed to start.'); }
+ }
+ function load(){
+  if(window.PLANTS&&window.PLANTS.length){ go(); return; }
+  // data.js missing or not executed (e.g. a request made while GitHub Pages was redeploying): retry, then fall back to plants.json
+  tries++;
+  if(tries<=2){
+   var sc=document.createElement('script'); sc.src='data.js?v=20261112b&r='+Date.now();
+   sc.onload=function(){ window.PLANTS&&window.PLANTS.length?go():setTimeout(load,800*tries); };
+   sc.onerror=function(){ setTimeout(load,800*tries); };
+   document.head.appendChild(sc); return;
+  }
+  var x=new XMLHttpRequest(); x.open('GET','plants.json?r='+Date.now());
+  x.onload=function(){ try{ var d=JSON.parse(x.responseText); if(d&&d.length){ window.PLANTS=d; go(); return; } }catch(e){} showError('Plant data failed to load.'); };
+  x.onerror=function(){ showError('Plant data failed to load.'); };
+  x.send();
+ }
+ window.__bootPlants=load;
+})();
+function startApp(plants){
 const REDUCED=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const STATUS = {
  'Operating':{c:'var(--op)',hex:'#34d399',cls:'op'},
@@ -235,7 +269,6 @@ const STATUS = {
  'Never completed':{c:'var(--nc)',hex:'#a78bfa',cls:'nc'}
 };
 const UNIT_COLORS={'Operational':'rgba(52,211,153,.14);color:#6ee7b7','Restart in progress':'rgba(251,191,36,.14);color:#fcd34d','Planned':'rgba(96,165,250,.14);color:#93c5fd','Under construction':'rgba(96,165,250,.14);color:#93c5fd'};
-const plants = window.PLANTS || [];
 const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const val = s => (s===null||s===undefined||s==='')?'<span style="color:#94a3b8">—</span>':esc(s);
 
@@ -265,7 +298,8 @@ map.on('zoomend',()=>{ if(map.getZoom()>16 && (map.hasLayer(light)||map.hasLayer
 L.control.layers(base,null,{position:'topleft'}).addTo(map);
 L.control.scale({imperial:true,metric:true,position:'bottomright'}).addTo(map);
 
-const cluster = L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:45,spiderfyOnMaxZoom:true,disableClusteringAtZoom:9,
+function plainGroup(){ const g=L.featureGroup(); g.addLayers=a=>{a.forEach(m=>g.addLayer(m));return g;}; return g; }
+const cluster = (typeof L.markerClusterGroup==='function') ? L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:45,spiderfyOnMaxZoom:true,disableClusteringAtZoom:9,
  iconCreateFunction:function(cl){
   const ms=cl.getAllChildMarkers(); const n=ms.length; const ll=cl.getLatLng();
   const counts={}; ms.forEach(m=>counts[m.plant.status]=(counts[m.plant.status]||0)+1);
@@ -273,7 +307,7 @@ const cluster = L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius
   let acc=0,stops=[];Object.keys(STATUS).forEach(k=>{if(counts[k]){const a=acc/n*360,b=(acc+counts[k])/n*360;stops.push(STATUS[k].hex+' '+a+'deg '+b+'deg');acc+=counts[k];}});
   const size=n<10?36:n<25?42:48;
   return L.divIcon({html:'<div style="--i:'+introDelay(ll.lng)+'s;background:conic-gradient('+stops.join(',')+');width:'+size+'px;height:'+size+'px"><span style="background:#0f172a;border-radius:50%;width:'+(size-8)+'px;height:'+(size-8)+'px;display:grid;place-items:center;box-shadow:inset 0 0 0 2px rgba(255,255,255,.9)">'+n+'</span></div>',className:'cl',iconSize:[size,size]});
- }});
+ }}) : plainGroup();
 map.addLayer(cluster);
 
 function introDelay(lng){ return (0.55+Math.max(0,Math.min(1,(lng+125)/58))*0.9).toFixed(2); }
@@ -291,18 +325,24 @@ const markers = plants.map(p=>{
 });
 
 // legend with status toggles
+let collapseLegend=()=>{};
 const active=new Set(Object.keys(STATUS));
+try{
 const legend=L.control({position:'topright'});
 legend.onAdd=function(){
  const d=L.DomUtil.create('div','legend glass');
  let h='<div class="lgh" role="button" tabindex="0" aria-expanded="true">Plant status <span class="car">▾</span></div><div class="lgb"><div>';
  Object.keys(STATUS).forEach(k=>{const n=plants.filter(p=>p.status===k).length;
   h+='<label><input type="checkbox" data-s="'+esc(k)+'" checked><span class="dot" style="background:'+STATUS[k].hex+';color:'+STATUS[k].hex+'"></span>'+esc(k)+'<span class="n">'+n+'</span></label>';});
- h+='<div class="note" style="margin-top:8px;max-width:200px">Dot size ∝ capacity · number = reactor units</div></div></div>';
- d.innerHTML=h; if(window.innerWidth<=720) d.classList.add('collapsed'); const lgh=d.querySelector('.lgh'),tog=()=>{d.classList.toggle('collapsed');lgh.setAttribute('aria-expanded',!d.classList.contains('collapsed'));}; lgh.addEventListener('click',tog); lgh.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tog();}}); L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
+ h+='<div class="note" style="margin-top:8px;max-width:200px">Dot size ∝ capacity · number = reactor units</div><button type="button" class="lgdone">Done</button></div></div>';
+ d.innerHTML=h; if(window.innerWidth<=720) d.classList.add('collapsed'); const lgh=d.querySelector('.lgh'),setC=c=>{d.classList.toggle('collapsed',c);lgh.setAttribute('aria-expanded',String(!c));},tog=()=>setC(!d.classList.contains('collapsed'));
+ lgh.setAttribute('aria-expanded',String(!d.classList.contains('collapsed')));
+ d.querySelector('.lgdone').addEventListener('click',()=>setC(true));
+ collapseLegend=()=>{ if(window.innerWidth<=720) setC(true); }; lgh.addEventListener('click',tog); lgh.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tog();}}); L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
  d.querySelectorAll('input').forEach(i=>i.addEventListener('change',()=>{i.checked?active.add(i.dataset.s):active.delete(i.dataset.s);applyFilters();}));
  return d;};
 legend.addTo(map);
+}catch(err){ console.error('legend failed',err); }
 
 const $search=document.getElementById('search'),$type=document.getElementById('ftype'),$count=document.getElementById('count');
 document.getElementById('plantlist').innerHTML=plants.map(p=>'<option value="'+esc(p.name)+'">'+esc(p.state)+' – '+esc(p.status)+'</option>').join('');
@@ -407,11 +447,12 @@ function render(p){
   '<a href="https://www.google.com/maps/search/?api=1&query='+p.lat+','+p.lon+'" target="_blank" rel="noopener">Open in Google Maps ↗</a></div>'+
   (p.units.some(u=>u.license_expires_year)?'<p class="note">* License expiration year from the NRC Information Digest 2024–2025 (data as of Sep 2024); some licenses have since been renewed or are in renewal.</p>':'')+
   '</div>';
- wirePhoto(p);
+ try{ wirePhoto(p); }catch(err){ console.error("photo wiring failed",err); }
  $pbody.querySelectorAll('[data-mw]').forEach(el=>{el.dataset.n=0;countUp(el,+el.dataset.mw,' MW',1100);});
  $pbody.scrollTop=0; $pbody.classList.remove('swap'); void $pbody.offsetWidth; $pbody.classList.add('swap');
 }
 function select(p,fly){
+ try{ collapseLegend(); }catch(e){}
  const m=markers.find(x=>x.plant===p); if(!m) return;
  if(!matches(p)){ $search.value=''; active.add(p.status); document.querySelectorAll('.legend input').forEach(i=>{if(i.dataset.s===p.status)i.checked=true;}); $type.value=''; applyFilters(); }
  if(selected&&selected!==m) selected.setIcon(iconFor(selected.plant));
@@ -427,19 +468,26 @@ function select(p,fly){
 }
 window.selectPlant=id=>{const p=plants.find(x=>x.id===id); if(p) select(p,true);};
 
+// tapping the map collapses the legend on phones
+map.on('click',()=>collapseLegend());
 // about box
+try{
 const meta=window.PLANT_META||{sources:[]};
 document.getElementById('aboutBox').innerHTML='<b>About this map</b><br>'+plants.length+' US commercial nuclear power plant sites (operating, restarting, planned, shut down and never-completed). Click a dot for details. Statuses and unit data reflect the sources as of '+esc(meta.generated)+'.<br><br><b>Sources</b><ul style="padding-left:18px;margin:4px 0">'+meta.sources.map(s=>'<li><a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.name)+'</a></li>').join('')+'</ul><span class="note">Photos are freely licensed images from Wikimedia Commons; credit and license shown under each photo. Not an official government product.</span>';
 document.getElementById('aboutBtn').onclick=e=>{e.stopPropagation();document.getElementById('aboutBox').classList.toggle('show');};
 map.on('click',()=>document.getElementById('aboutBox').classList.remove('show'));
+}catch(err){ console.error('about box failed',err); }
 
 applyFilters();
+try{
 const deep=location.hash.length>1;
 if(!REDUCED && !deep){ setTimeout(()=>map.flyTo([38.5,-96],window.innerWidth<=720?3.5:4.5,{duration:1.8,easeLinearity:0.12}),250); }
 setTimeout(()=>document.body.classList.remove('intro'),REDUCED?0:2600);
 if(REDUCED) document.body.classList.remove('intro');
 if(deep){ setTimeout(()=>window.selectPlant(decodeURIComponent(location.hash.slice(1))),REDUCED?0:500); }
 document.addEventListener('keydown',e=>{if(e.key==='Escape') document.getElementById('pclose').click();});
+}catch(err){ console.error('intro/deep link failed',err); }
+try{
 // mobile bottom sheet: tap the handle to expand/collapse, drag down to dismiss
 (function(){const g=document.getElementById('pgrab');let y0=null,dy=0;
  g.addEventListener('pointerdown',e=>{y0=e.clientY;dy=0;$panel.classList.add('dragging');g.setPointerCapture(e.pointerId);});
@@ -450,7 +498,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape') document.getElement
   else if(dy<-40) $panel.classList.add('full');
   y0=null;};
  g.addEventListener('pointerup',end); g.addEventListener('pointercancel',end);})();
-})();
+}catch(err){ console.error('bottom sheet failed',err); }
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',window.__bootPlants); else window.__bootPlants();
 </script>
 </body>
 </html>
