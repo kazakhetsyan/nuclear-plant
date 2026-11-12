@@ -2,6 +2,18 @@
 
 Open `index.html` in any modern browser (works from a local file or any static host such as GitHub Pages, Netlify, or Cloudflare Pages). Leaflet 1.9.4 and Leaflet.markercluster 1.5.3 load from unpkg; basemap tiles come from Esri (with OpenStreetMap as an option).
 
+Features
+- Timeline
+- Nearest plants
+- EPZ rings
+- Compare
+- Stats
+- Heat map
+- License countdown
+- Tour
+- Share
+- Estimated impact
+
 Files
 - `index.html` – the map app (search, reactor-type filter, status toggles in the legend, detail panel, deep links like `index.html#vogtle`)
 - `data.js` – the embedded dataset (`window.PLANTS`), 90 plant sites / 148 reactor units

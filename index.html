@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap">
 <link rel="stylesheet" href="vendor/leaflet.css">
 <link rel="stylesheet" href="vendor/MarkerCluster.css">
+<link rel="stylesheet" href="features.css?v=20261112d">
 <style>
 :root{
 --bg:#07090d;--surface:rgba(14,18,26,.78);--glass:rgba(13,17,25,.62);--glass-strong:rgba(13,17,25,.78);
@@ -259,6 +260,10 @@ h3:after{content:"";flex:1;height:1px;background:var(--line)}
  }
  window.__bootPlants=load;
 })();
+const APP={hooks:{render:[],filter:[],after:[],close:[],select:[],ready:[]},extraFilter:null,isGone:null,countOverride:null};
+window.APP=APP;
+function dispStatus(p){ try{ if(APP.statusAt){ const s=APP.statusAt(p); if(s) return s; } }catch(err){} return p.status; }
+function runHooks(name,arg){ (APP.hooks[name]||[]).forEach(f=>{ try{ f(arg); }catch(err){ console.error('hook '+name+' failed',err); } }); }
 function startApp(plants){
 const REDUCED=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 const STATUS = {
@@ -302,7 +307,7 @@ function plainGroup(){ const g=L.featureGroup(); g.addLayers=a=>{a.forEach(m=>g.
 const cluster = (typeof L.markerClusterGroup==='function') ? L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:45,spiderfyOnMaxZoom:true,disableClusteringAtZoom:9,
  iconCreateFunction:function(cl){
   const ms=cl.getAllChildMarkers(); const n=ms.length; const ll=cl.getLatLng();
-  const counts={}; ms.forEach(m=>counts[m.plant.status]=(counts[m.plant.status]||0)+1);
+  const counts={}; ms.forEach(m=>{const k=STATUS[dispStatus(m.plant)]?dispStatus(m.plant):m.plant.status; counts[k]=(counts[k]||0)+1;});
   // conic gradient by status share
   let acc=0,stops=[];Object.keys(STATUS).forEach(k=>{if(counts[k]){const a=acc/n*360,b=(acc+counts[k])/n*360;stops.push(STATUS[k].hex+' '+a+'deg '+b+'deg');acc+=counts[k];}});
   const size=n<10?36:n<25?42:48;
@@ -312,9 +317,11 @@ map.addLayer(cluster);
 
 function introDelay(lng){ return (0.55+Math.max(0,Math.min(1,(lng+125)/58))*0.9).toFixed(2); }
 function iconFor(p,sel){
- const cap=p.operating_capacity_mw||0; const s = p.status==='Operating'? Math.round(18+Math.min(14,cap/300)) : 16;
- const st=STATUS[p.status], pulse=p.status==='Operating'||p.status==='Restart in progress';
- return L.divIcon({className:'',html:'<div class="pw'+(pulse?' op':'')+'" style="--c:'+st.hex+';--i:'+introDelay(p.lon)+'s;--d:-'+((p.lat*7.3+p.lon*3.1)%3.2+3.2).toFixed(2)+'s"><div class="pm st-'+st.cls+(sel?' sel':'')+'">'+(p.num_units>1&&s>=20?p.num_units:'')+'</div></div>',iconSize:[s,s],iconAnchor:[s/2,s/2],popupAnchor:[0,-s/2]});
+ const ds=STATUS[dispStatus(p)]?dispStatus(p):p.status;
+ const cap=p.operating_capacity_mw||0; const s = ds==='Operating'? Math.round(18+Math.min(14,cap/300)) : 16;
+ let gone=false; try{ gone=!!(APP.isGone&&APP.isGone(p)); }catch(err){}
+ const st=STATUS[ds], pulse=!gone&&(ds==='Operating'||ds==='Restart in progress');
+ return L.divIcon({className:'',html:'<div class="pw'+(pulse?' op':'')+(gone?' gone':'')+'" style="--c:'+st.hex+';--i:'+introDelay(p.lon)+'s;--d:-'+((p.lat*7.3+p.lon*3.1)%3.2+3.2).toFixed(2)+'s"><div class="pm st-'+st.cls+(sel?' sel':'')+'">'+(p.num_units>1&&s>=20?p.num_units:'')+'</div></div>',iconSize:[s,s],iconAnchor:[s/2,s/2],popupAnchor:[0,-s/2]});
 }
 const markers = plants.map(p=>{
  const m=L.marker([p.lat,p.lon],{icon:iconFor(p),title:p.name,riseOnHover:true,keyboard:true,alt:p.name});
@@ -348,6 +355,7 @@ const $search=document.getElementById('search'),$type=document.getElementById('f
 document.getElementById('plantlist').innerHTML=plants.map(p=>'<option value="'+esc(p.name)+'">'+esc(p.state)+' – '+esc(p.status)+'</option>').join('');
 function matches(p){
  if(!active.has(p.status)) return false;
+ try{ if(APP.extraFilter && !APP.extraFilter(p)) return false; }catch(err){ console.error(err); }
  const t=$type.value;
  if(t==='PWR'||t==='BWR'){ if(!p.reactor_types.includes(t)) return false; }
  else if(t==='OTHER'){ if(p.reactor_types.every(x=>x==='PWR'||x==='BWR')) return false; }
@@ -365,8 +373,11 @@ function applyFilters(){
  const vis=markers.filter(m=>matches(m.plant));
  cluster.addLayers(vis);
  const units=vis.reduce((a,m)=>a+m.plant.units.filter(u=>u.status==='Operational').length,0);
- if(!$count.firstChild||!$count.querySelector('b')) $count.innerHTML='<b data-n="0">0</b> of '+plants.length+' plants · <b data-n="0">0</b> operating reactors';
- const bs=$count.querySelectorAll('b'); countUp(bs[0],vis.length); countUp(bs[1],units);
+  let co=null; try{ co=APP.countOverride&&APP.countOverride(vis); }catch(err){ console.error(err); }
+ if(co){ $count.innerHTML=co; } else {
+ if(!$count.querySelector('b[data-std]')) $count.innerHTML='<b data-std data-n="0">0</b> of '+plants.length+' plants · <b data-n="0">0</b> operating reactors';
+ const bs=$count.querySelectorAll('b'); countUp(bs[0],vis.length); countUp(bs[1],units); }
+ runHooks('after',vis);
  return vis;
 }
 $type.addEventListener('change',applyFilters);
@@ -379,7 +390,7 @@ $search.addEventListener('keydown',e=>{if(e.key==='Enter'){const vis=markers.fil
 // panel
 const $panel=document.getElementById('panel'),$pbody=document.getElementById('pbody');
 let selected=null;
-document.getElementById('pclose').onclick=()=>{ $panel.classList.remove('open','full'); if(selected){selected.setIcon(iconFor(selected.plant));selected=null;} history.replaceState(null,'',location.pathname+location.search); };
+document.getElementById('pclose').onclick=()=>{ $panel.classList.remove('open','full'); if(selected){selected.setIcon(iconFor(selected.plant));selected=null;} history.replaceState(null,'',location.pathname+location.search); runHooks('close'); };
 function fmtYearRange(p){ const a=p.first_construction_year,b=p.first_commercial_year; return b?String(b):(a?('Construction began '+a):''); }
 function unitHtml(u){
  const rows=[['Reactor type',u.type?(u.type+(u.type_full?' – '+u.type_full:'')):''],['Vendor / design',[u.vendor,u.model].filter(Boolean).join(' · ')],['Containment',u.containment],['Net capacity',u.capacity_mw?u.capacity_mw+' MW':''],['Construction start',u.construction_start],['Commercial operation',u.commercial_operation],['Closed',u.closed]];
@@ -449,10 +460,12 @@ function render(p){
   '</div>';
  try{ wirePhoto(p); }catch(err){ console.error("photo wiring failed",err); }
  $pbody.querySelectorAll('[data-mw]').forEach(el=>{el.dataset.n=0;countUp(el,+el.dataset.mw,' MW',1100);});
+ runHooks('render',p);
  $pbody.scrollTop=0; $pbody.classList.remove('swap'); void $pbody.offsetWidth; $pbody.classList.add('swap');
 }
 function select(p,fly){
  try{ collapseLegend(); }catch(e){}
+ runHooks('select',p);
  const m=markers.find(x=>x.plant===p); if(!m) return;
  if(!matches(p)){ $search.value=''; active.add(p.status); document.querySelectorAll('.legend input').forEach(i=>{if(i.dataset.s===p.status)i.checked=true;}); $type.value=''; applyFilters(); }
  if(selected&&selected!==m) selected.setIcon(iconFor(selected.plant));
@@ -467,6 +480,13 @@ function select(p,fly){
   const c=map.unproject(map.project([p.lat,p.lon],z).add(off),z); map.flyTo(c,z,{duration:REDUCED?0:1.4,easeLinearity:0.15,animate:!REDUCED}); }
 }
 window.selectPlant=id=>{const p=plants.find(x=>x.id===id); if(p) select(p,true);};
+// expose internals for optional feature modules (features.js); everything there is isolated in try/catch
+Object.assign(APP,{map:map,cluster:cluster,markers:markers,plants:plants,select:select,applyFilters:applyFilters,iconFor:iconFor,STATUS:STATUS,esc:esc,countUp:countUp,REDUCED:REDUCED,
+ panel:$panel,pbody:$pbody,getSelected:()=>selected?selected.plant:null,
+ refreshIcons:()=>markers.forEach(m=>m.setIcon(iconFor(m.plant,m===selected))),
+ closePanel:()=>document.getElementById('pclose').click(),
+ collapseLegend:()=>{ try{ collapseLegend(); }catch(e){} }});
+APP.ready=true;
 
 // tapping the map collapses the legend on phones
 map.on('click',()=>collapseLegend());
@@ -499,8 +519,11 @@ try{
   y0=null;};
  g.addEventListener('pointerup',end); g.addEventListener('pointercancel',end);})();
 }catch(err){ console.error('bottom sheet failed',err); }
+runHooks('ready',APP);
 }
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',window.__bootPlants); else window.__bootPlants();
 </script>
+<script src="vendor/leaflet-heat.js"></script>
+<script src="features.js?v=20261112d"></script>
 </body>
 </html>
