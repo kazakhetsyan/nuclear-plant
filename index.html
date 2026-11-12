@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap">
 <link rel="stylesheet" href="vendor/leaflet.css">
 <link rel="stylesheet" href="vendor/MarkerCluster.css">
-<link rel="stylesheet" href="features.css?v=20261112d">
+<link rel="stylesheet" href="features.css?v=20261112g">
 <style>
 :root{
 --bg:#07090d;--surface:rgba(14,18,26,.78);--glass:rgba(13,17,25,.62);--glass-strong:rgba(13,17,25,.78);
@@ -230,7 +230,7 @@ h3:after{content:"";flex:1;height:1px;background:var(--line)}
 <script>window.L||document.write('<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>');</script>
 <script src="vendor/leaflet.markercluster.js"></script>
 <script>(window.L&&L.markerClusterGroup)||document.write('<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"><\/script>');</script>
-<script src="data.js?v=20261112b"></script>
+<script src="data.js?v=20261112g"></script>
 <script>
 // ---- boot: make sure the data is present before starting; never leave the map silently empty ----
 (function(){
@@ -248,7 +248,7 @@ h3:after{content:"";flex:1;height:1px;background:var(--line)}
   // data.js missing or not executed (e.g. a request made while GitHub Pages was redeploying): retry, then fall back to plants.json
   tries++;
   if(tries<=2){
-   var sc=document.createElement('script'); sc.src='data.js?v=20261112b&r='+Date.now();
+   var sc=document.createElement('script'); sc.src='data.js?v=20261112g&r='+Date.now();
    sc.onload=function(){ window.PLANTS&&window.PLANTS.length?go():setTimeout(load,800*tries); };
    sc.onerror=function(){ setTimeout(load,800*tries); };
    document.head.appendChild(sc); return;
@@ -356,6 +356,7 @@ document.getElementById('plantlist').innerHTML=plants.map(p=>'<option value="'+e
 function matches(p){
  if(!active.has(p.status)) return false;
  try{ if(APP.extraFilter && !APP.extraFilter(p)) return false; }catch(err){ console.error(err); }
+ try{ if(APP.filters){ for(const k in APP.filters){ if(APP.filters[k] && !APP.filters[k](p)) return false; } } }catch(err){ console.error(err); }
  const t=$type.value;
  if(t==='PWR'||t==='BWR'){ if(!p.reactor_types.includes(t)) return false; }
  else if(t==='OTHER'){ if(p.reactor_types.every(x=>x==='PWR'||x==='BWR')) return false; }
@@ -524,6 +525,6 @@ runHooks('ready',APP);
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',window.__bootPlants); else window.__bootPlants();
 </script>
 <script src="vendor/leaflet-heat.js"></script>
-<script src="features.js?v=20261112d"></script>
+<script src="features.js?v=20261112g"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 // US nuclear power plants dataset. Generated 2026-11-12 from Wikipedia, NRC, Wikidata, Wikimedia Commons.
-window.PLANT_META = {"generated": "2026-11-12", "sources": [{"name": "Wikipedia – List of commercial nuclear reactors (United States section)", "url": "https://en.wikipedia.org/wiki/List_of_commercial_nuclear_reactors#United_States"}, {"name": "U.S. NRC – List of Power Reactor Units", "url": "https://www.nrc.gov/reactors/operating/list-power-reactor-units.html"}, {"name": "U.S. NRC – Information Digest 2024–2025 (NUREG-1350 Vol. 35), Appendix F", "url": "https://www.nrc.gov/reading-rm/doc-collections/nuregs/staff/sr1350/index"}, {"name": "Wikipedia plant articles (coordinates, infobox, intro)", "url": "https://en.wikipedia.org/"}, {"name": "Wikidata", "url": "https://www.wikidata.org/"}, {"name": "Wikimedia Commons (photos)", "url": "https://commons.wikimedia.org/"}]};
+window.PLANT_META = {"generated": "2026-11-12", "sources": [{"name": "Wikipedia – List of commercial nuclear reactors (United States section)", "url": "https://en.wikipedia.org/wiki/List_of_commercial_nuclear_reactors#United_States"}, {"name": "U.S. NRC – List of Power Reactor Units", "url": "https://www.nrc.gov/reactors/operating/list-power-reactor-units.html"}, {"name": "U.S. NRC – Information Digest 2024–2025 (NUREG-1350 Vol. 35), Appendix F", "url": "https://www.nrc.gov/reading-rm/doc-collections/nuregs/staff/sr1350/index"}, {"name": "Wikipedia plant articles (coordinates, infobox, intro)", "url": "https://en.wikipedia.org/"}, {"name": "Wikidata", "url": "https://www.wikidata.org/"}, {"name": "Wikimedia Commons (photos)", "url": "https://commons.wikimedia.org/"}, {"name": "EIA-860 Annual Electric Generator Report (balancing authority per plant; 2025 release, plus 2013–2021 for retired plants)", "url": "https://www.eia.gov/electricity/data/eia860/"}, {"name": "HIFLD Independent System Operators boundaries (ORNL; via PASDA mirror)", "url": "https://www.pasda.psu.edu/uci/DataSummary.aspx?dataset=9103"}]};
 window.PLANTS = [
 {
 "id": "arkansas-nuclear-one",
@@ -69,7 +69,21 @@ window.PLANTS = [
 "nrc_location": "6 miles WNW of Russellville, AR",
 "license_expires_year": 2038
 }
-]
+],
+"grid": {
+"ba_code": "MISO",
+"ba_name": "Midcontinent ISO",
+"ba_name_eia": "Midcontinent Independent Transmission System Operator, Inc",
+"rto": "MISO",
+"region": "Midcontinent ISO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+8055
+],
+"eia_name": "Arkansas Nuclear One",
+"eia_860_year": 2025
+}
 },
 {
 "id": "beaver-valley",
@@ -139,7 +153,21 @@ window.PLANTS = [
 "nrc_location": "17 miles W of McCandless, PA",
 "license_expires_year": 2047
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+6040
+],
+"eia_name": "Beaver Valley",
+"eia_860_year": 2025
+}
 },
 {
 "id": "big-rock-point",
@@ -184,7 +212,8 @@ window.PLANTS = [
 "commercial_operation": "29 Mar 1963",
 "closed": "29 Aug 1997"
 }
-]
+],
+"grid": null
 },
 {
 "id": "braidwood",
@@ -254,7 +283,21 @@ window.PLANTS = [
 "nrc_location": "20 miles SSW of Joliet, IL",
 "license_expires_year": 2047
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+6022
+],
+"eia_name": "Braidwood Generation Station",
+"eia_860_year": 2025
+}
 },
 {
 "id": "browns-ferry",
@@ -343,7 +386,21 @@ window.PLANTS = [
 "nrc_location": "32 miles W of Huntsville, AL",
 "license_expires_year": 2036
 }
-]
+],
+"grid": {
+"ba_code": "TVA",
+"ba_name": "Tennessee Valley Authority",
+"ba_name_eia": "Tennessee Valley Authority",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+46
+],
+"eia_name": "Browns Ferry",
+"eia_860_year": 2025
+}
 },
 {
 "id": "brunswick",
@@ -413,7 +470,21 @@ window.PLANTS = [
 "nrc_location": "30 miles S of Wilmington, NC",
 "license_expires_year": 2034
 }
-]
+],
+"grid": {
+"ba_code": "CPLE",
+"ba_name": "Duke Energy Progress East",
+"ba_name_eia": "Duke Energy Progress East",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+6014
+],
+"eia_name": "Brunswick Nuclear",
+"eia_860_year": 2025
+}
 },
 {
 "id": "byron",
@@ -483,7 +554,21 @@ window.PLANTS = [
 "nrc_location": "17 miles SW of Rockford, IL",
 "license_expires_year": 2046
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+6023
+],
+"eia_name": "Byron Generating Station",
+"eia_860_year": 2025
+}
 },
 {
 "id": "callaway",
@@ -534,7 +619,21 @@ window.PLANTS = [
 "nrc_location": "25 miles ENE of Jefferson City, MO",
 "license_expires_year": 2044
 }
-]
+],
+"grid": {
+"ba_code": "MISO",
+"ba_name": "Midcontinent ISO",
+"ba_name_eia": "Midcontinent Independent Transmission System Operator, Inc",
+"rto": "MISO",
+"region": "Midcontinent ISO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+6153
+],
+"eia_name": "Callaway",
+"eia_860_year": 2025
+}
 },
 {
 "id": "calvert-cliffs",
@@ -604,7 +703,21 @@ window.PLANTS = [
 "nrc_location": "40 miles S of Annapolis, MD",
 "license_expires_year": 2036
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+6011
+],
+"eia_name": "Calvert Cliffs Nuclear Power Plant",
+"eia_860_year": 2025
+}
 },
 {
 "id": "catawba",
@@ -674,7 +787,21 @@ window.PLANTS = [
 "nrc_location": "18 miles S of Charlotte, NC",
 "license_expires_year": 2043
 }
-]
+],
+"grid": {
+"ba_code": "DUK",
+"ba_name": "Duke Energy Carolinas",
+"ba_name_eia": "Duke Energy Carolinas",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+6036
+],
+"eia_name": "Catawba",
+"eia_860_year": 2025
+}
 },
 {
 "id": "clinch-river",
@@ -719,7 +846,8 @@ window.PLANTS = [
 "commercial_operation": "",
 "closed": ""
 }
-]
+],
+"grid": null
 },
 {
 "id": "clinton",
@@ -770,7 +898,21 @@ window.PLANTS = [
 "nrc_location": "23 miles SSE of Bloomington, IL",
 "license_expires_year": 2027
 }
-]
+],
+"grid": {
+"ba_code": "MISO",
+"ba_name": "Midcontinent ISO",
+"ba_name_eia": "Midcontinent Independent Transmission System Operator, Inc",
+"rto": "MISO",
+"region": "Midcontinent ISO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+204
+],
+"eia_name": "Clinton Power Station",
+"eia_860_year": 2025
+}
 },
 {
 "id": "columbia",
@@ -821,7 +963,21 @@ window.PLANTS = [
 "nrc_location": "20 miles NNE of Pasco, WA",
 "license_expires_year": 2043
 }
-]
+],
+"grid": {
+"ba_code": "BPAT",
+"ba_name": "Bonneville Power Administration",
+"ba_name_eia": "Bonneville Power Administration",
+"rto": null,
+"region": "West · no RTO",
+"interconnection": "Western",
+"nerc_region": "WECC",
+"eia_plant_id": [
+371
+],
+"eia_name": "Columbia Generating Station",
+"eia_860_year": 2025
+}
 },
 {
 "id": "comanche-peak",
@@ -891,7 +1047,21 @@ window.PLANTS = [
 "nrc_location": "40 miles SW of Fort Worth, TX",
 "license_expires_year": 2033
 }
-]
+],
+"grid": {
+"ba_code": "ERCO",
+"ba_name": "ERCOT",
+"ba_name_eia": "Electric Reliability Council of Texas, Inc",
+"rto": "ERCOT",
+"region": "ERCOT",
+"interconnection": "Texas",
+"nerc_region": "TRE",
+"eia_plant_id": [
+6145
+],
+"eia_name": "Comanche Peak",
+"eia_860_year": 2025
+}
 },
 {
 "id": "connecticut-yankee",
@@ -936,7 +1106,8 @@ window.PLANTS = [
 "commercial_operation": "1 Jan 1968",
 "closed": "5 Dec 1996"
 }
-]
+],
+"grid": null
 },
 {
 "id": "cooper",
@@ -987,7 +1158,21 @@ window.PLANTS = [
 "nrc_location": "23 miles S of Nebraska City, NE",
 "license_expires_year": 2034
 }
-]
+],
+"grid": {
+"ba_code": "SWPP",
+"ba_name": "Southwest Power Pool",
+"ba_name_eia": "Southwest Power Pool",
+"rto": "SPP",
+"region": "Southwest Power Pool",
+"interconnection": "Eastern",
+"nerc_region": "MRO",
+"eia_plant_id": [
+8036
+],
+"eia_name": "Cooper Nuclear Station",
+"eia_860_year": 2025
+}
 },
 {
 "id": "crystal-river-3",
@@ -1032,7 +1217,21 @@ window.PLANTS = [
 "commercial_operation": "13 Mar 1977",
 "closed": "5 Feb 2013"
 }
-]
+],
+"grid": {
+"ba_code": "FPC",
+"ba_name": "Duke Energy Florida",
+"ba_name_eia": "Progress Energy Florida",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+628
+],
+"eia_name": "Crystal River",
+"eia_860_year": 2025
+}
 },
 {
 "id": "davis-besse",
@@ -1083,7 +1282,21 @@ window.PLANTS = [
 "nrc_location": "21 miles ESE of Toledo, OH",
 "license_expires_year": 2037
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+6149
+],
+"eia_name": "Davis Besse",
+"eia_860_year": 2025
+}
 },
 {
 "id": "diablo-canyon",
@@ -1153,7 +1366,21 @@ window.PLANTS = [
 "nrc_location": "12 miles WSW of San Luis Obispo, CA",
 "license_expires_year": 2025
 }
-]
+],
+"grid": {
+"ba_code": "CISO",
+"ba_name": "California ISO",
+"ba_name_eia": "California Independent System Operator",
+"rto": "CAISO",
+"region": "California ISO",
+"interconnection": "Western",
+"nerc_region": "WECC",
+"eia_plant_id": [
+6099
+],
+"eia_name": "Diablo Canyon",
+"eia_860_year": 2025
+}
 },
 {
 "id": "donald-c-cook",
@@ -1223,7 +1450,21 @@ window.PLANTS = [
 "nrc_location": "13 miles S of Benton Harbor, MI",
 "license_expires_year": 2037
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+6000
+],
+"eia_name": "Donald C Cook",
+"eia_860_year": 2025
+}
 },
 {
 "id": "dresden",
@@ -1306,7 +1547,21 @@ window.PLANTS = [
 "nrc_location": "25 miles SW of Joliet, IL",
 "license_expires_year": 2031
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+869
+],
+"eia_name": "Dresden Generating Station",
+"eia_860_year": 2025
+}
 },
 {
 "id": "duane-arnold",
@@ -1351,7 +1606,21 @@ window.PLANTS = [
 "commercial_operation": "1 Feb 1975",
 "closed": "10 Aug 2020"
 }
-]
+],
+"grid": {
+"ba_code": "MISO",
+"ba_name": "Midcontinent ISO",
+"ba_name_eia": "Midcontinent Independent Transmission System Operator, Inc",
+"rto": "MISO",
+"region": "Midcontinent ISO",
+"interconnection": "Eastern",
+"nerc_region": "MRO",
+"eia_plant_id": [
+1060
+],
+"eia_name": "Duane Arnold Energy Center",
+"eia_860_year": 2019
+}
 },
 {
 "id": "edwin-i-hatch",
@@ -1421,7 +1690,21 @@ window.PLANTS = [
 "nrc_location": "20 miles S of Vidalia, GA",
 "license_expires_year": 2038
 }
-]
+],
+"grid": {
+"ba_code": "SOCO",
+"ba_name": "Southern Company",
+"ba_name_eia": "Southern Company Services, Inc. - Trans",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+6051
+],
+"eia_name": "Edwin I Hatch",
+"eia_860_year": 2025
+}
 },
 {
 "id": "elk-river",
@@ -1460,7 +1743,8 @@ window.PLANTS = [
 "commercial_operation": "1 Jul 1964",
 "closed": "1 Feb 1968"
 }
-]
+],
+"grid": null
 },
 {
 "id": "fermi",
@@ -1525,14 +1809,28 @@ window.PLANTS = [
 "nrc_location": "25 miles NE of Toledo, OH",
 "license_expires_year": 2045
 }
-]
+],
+"grid": {
+"ba_code": "MISO",
+"ba_name": "Midcontinent ISO",
+"ba_name_eia": "Midcontinent Independent Transmission System Operator, Inc",
+"rto": "MISO",
+"region": "Midcontinent ISO",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+1729
+],
+"eia_name": "Fermi",
+"eia_860_year": 2025
+}
 },
 {
 "id": "fort-calhoun",
 "name": "Fort Calhoun",
 "wiki_title": "Fort Calhoun Nuclear Generating Station",
-"state": "Washington",
-"state_abbr": "WA",
+"state": "Nebraska",
+"state_abbr": "NE",
 "location": "Washington County, near Blair, Nebraska",
 "lat": 41.52028,
 "lon": -96.07722,
@@ -1570,7 +1868,21 @@ window.PLANTS = [
 "commercial_operation": "9 Aug 1973",
 "closed": "24 Oct 2016"
 }
-]
+],
+"grid": {
+"ba_code": "SWPP",
+"ba_name": "Southwest Power Pool",
+"ba_name_eia": "Southwest Power Pool",
+"rto": "SPP",
+"region": "Southwest Power Pool",
+"interconnection": "Eastern",
+"nerc_region": "MRO",
+"eia_plant_id": [
+2289
+],
+"eia_name": "Fort Calhoun",
+"eia_860_year": 2025
+}
 },
 {
 "id": "fort-st-vrain",
@@ -1615,7 +1927,8 @@ window.PLANTS = [
 "commercial_operation": "1 Jul 1979",
 "closed": "29 Aug 1989"
 }
-]
+],
+"grid": null
 },
 {
 "id": "ginna",
@@ -1666,7 +1979,21 @@ window.PLANTS = [
 "nrc_location": "20 miles NE of Rochester, NY",
 "license_expires_year": 2029
 }
-]
+],
+"grid": {
+"ba_code": "NYIS",
+"ba_name": "New York ISO",
+"ba_name_eia": "New York Independent System Operator",
+"rto": "NYISO",
+"region": "New York ISO",
+"interconnection": "Eastern",
+"nerc_region": "NPCC",
+"eia_plant_id": [
+6122
+],
+"eia_name": "R E Ginna Nuclear Power Plant",
+"eia_860_year": 2025
+}
 },
 {
 "id": "grand-gulf",
@@ -1717,7 +2044,21 @@ window.PLANTS = [
 "nrc_location": "20 miles S of Vicksburg, MS",
 "license_expires_year": 2044
 }
-]
+],
+"grid": {
+"ba_code": "MISO",
+"ba_name": "Midcontinent ISO",
+"ba_name_eia": "Midcontinent Independent Transmission System Operator, Inc",
+"rto": "MISO",
+"region": "Midcontinent ISO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+6072
+],
+"eia_name": "Grand Gulf",
+"eia_860_year": 2025
+}
 },
 {
 "id": "h-b-robinson",
@@ -1768,7 +2109,21 @@ window.PLANTS = [
 "nrc_location": "26 miles NW of Florence, SC",
 "license_expires_year": 2030
 }
-]
+],
+"grid": {
+"ba_code": "CPLE",
+"ba_name": "Duke Energy Progress East",
+"ba_name_eia": "Duke Energy Progress East",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+3251
+],
+"eia_name": "H B Robinson",
+"eia_860_year": 2025
+}
 },
 {
 "id": "hallam",
@@ -1813,7 +2168,8 @@ window.PLANTS = [
 "commercial_operation": "1 Nov 1963",
 "closed": "1 Sep 1969"
 }
-]
+],
+"grid": null
 },
 {
 "id": "hartsville",
@@ -1897,7 +2253,8 @@ window.PLANTS = [
 "commercial_operation": "",
 "closed": "22 Mar 1983"
 }
-]
+],
+"grid": null
 },
 {
 "id": "hope-creek",
@@ -1948,7 +2305,21 @@ window.PLANTS = [
 "nrc_location": "18 miles SE of Wilmington, DE",
 "license_expires_year": 2046
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+6118
+],
+"eia_name": "PSEG Hope Creek Generating Station",
+"eia_860_year": 2025
+}
 },
 {
 "id": "humboldt-bay",
@@ -1993,7 +2364,8 @@ window.PLANTS = [
 "commercial_operation": "1 Aug 1963",
 "closed": "2 Jul 1976"
 }
-]
+],
+"grid": null
 },
 {
 "id": "indian-point",
@@ -2064,7 +2436,22 @@ window.PLANTS = [
 "commercial_operation": "30 Aug 1976",
 "closed": "30 Apr 2021"
 }
-]
+],
+"grid": {
+"ba_code": "NYIS",
+"ba_name": "New York ISO",
+"ba_name_eia": "New York Independent System Operator",
+"rto": "NYISO",
+"region": "New York ISO",
+"interconnection": "Eastern",
+"nerc_region": "NPCC",
+"eia_plant_id": [
+2497,
+8907
+],
+"eia_name": "Indian Point 2",
+"eia_860_year": 2021
+}
 },
 {
 "id": "james-a-fitzpatrick",
@@ -2115,7 +2502,21 @@ window.PLANTS = [
 "nrc_location": "6 miles NE of Oswego, NY",
 "license_expires_year": 2034
 }
-]
+],
+"grid": {
+"ba_code": "NYIS",
+"ba_name": "New York ISO",
+"ba_name_eia": "New York Independent System Operator",
+"rto": "NYISO",
+"region": "New York ISO",
+"interconnection": "Eastern",
+"nerc_region": "NPCC",
+"eia_plant_id": [
+6110
+],
+"eia_name": "James A Fitzpatrick",
+"eia_860_year": 2025
+}
 },
 {
 "id": "joseph-m-farley",
@@ -2185,7 +2586,21 @@ window.PLANTS = [
 "nrc_location": "18 miles E of Dothan, AL",
 "license_expires_year": 2041
 }
-]
+],
+"grid": {
+"ba_code": "SOCO",
+"ba_name": "Southern Company",
+"ba_name_eia": "Southern Company Services, Inc. - Trans",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+6001
+],
+"eia_name": "Joseph M Farley",
+"eia_860_year": 2025
+}
 },
 {
 "id": "kemmerer",
@@ -2230,7 +2645,21 @@ window.PLANTS = [
 "commercial_operation": "",
 "closed": ""
 }
-]
+],
+"grid": {
+"ba_code": "PACE",
+"ba_name": "PacifiCorp East",
+"ba_name_eia": "PacifiCorp - East",
+"rto": null,
+"region": "West · no RTO",
+"interconnection": "Western",
+"nerc_region": "WECC",
+"eia_plant_id": [
+68635
+],
+"eia_name": "Kemmerer Unit 1",
+"eia_860_year": 2025
+}
 },
 {
 "id": "kewaunee",
@@ -2275,7 +2704,21 @@ window.PLANTS = [
 "commercial_operation": "16 Jun 1974",
 "closed": "7 May 2013"
 }
-]
+],
+"grid": {
+"ba_code": "MISO",
+"ba_name": "Midcontinent ISO",
+"ba_name_eia": "Midcontinent Independent Transmission System Operator, Inc",
+"rto": "MISO",
+"region": "Midcontinent ISO",
+"interconnection": "Eastern",
+"nerc_region": "MRO",
+"eia_plant_id": [
+8024
+],
+"eia_name": "Kewaunee",
+"eia_860_year": 2013
+}
 },
 {
 "id": "la-crosse",
@@ -2320,7 +2763,8 @@ window.PLANTS = [
 "commercial_operation": "7 Nov 1969",
 "closed": "30 Apr 1987"
 }
-]
+],
+"grid": null
 },
 {
 "id": "lasalle-county",
@@ -2390,7 +2834,21 @@ window.PLANTS = [
 "nrc_location": "11 miles SE of Ottawa, IL",
 "license_expires_year": 2043
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+6026
+],
+"eia_name": "LaSalle Generating Station",
+"eia_860_year": 2025
+}
 },
 {
 "id": "limerick",
@@ -2460,7 +2918,21 @@ window.PLANTS = [
 "nrc_location": "21 miles NW of Philadelphia, PA",
 "license_expires_year": 2049
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+6105
+],
+"eia_name": "Limerick",
+"eia_860_year": 2025
+}
 },
 {
 "id": "maine-yankee",
@@ -2505,7 +2977,8 @@ window.PLANTS = [
 "commercial_operation": "28 Dec 1972",
 "closed": "1 Aug 1997"
 }
-]
+],
+"grid": null
 },
 {
 "id": "marble-hill",
@@ -2550,7 +3023,8 @@ window.PLANTS = [
 "commercial_operation": "",
 "closed": "10 Jan 1984"
 }
-]
+],
+"grid": null
 },
 {
 "id": "mcguire",
@@ -2620,7 +3094,21 @@ window.PLANTS = [
 "nrc_location": "17 miles N of Charlotte, NC",
 "license_expires_year": 2043
 }
-]
+],
+"grid": {
+"ba_code": "DUK",
+"ba_name": "Duke Energy Carolinas",
+"ba_name_eia": "Duke Energy Carolinas",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+6038
+],
+"eia_name": "McGuire",
+"eia_860_year": 2025
+}
 },
 {
 "id": "millstone",
@@ -2704,7 +3192,21 @@ window.PLANTS = [
 "nrc_location": "3.2 miles WSW of New London, CT",
 "license_expires_year": 2045
 }
-]
+],
+"grid": {
+"ba_code": "ISNE",
+"ba_name": "ISO New England",
+"ba_name_eia": "ISO New England Inc",
+"rto": "ISO-NE",
+"region": "ISO New England",
+"interconnection": "Eastern",
+"nerc_region": "NPCC",
+"eia_plant_id": [
+566
+],
+"eia_name": "Millstone",
+"eia_860_year": 2025
+}
 },
 {
 "id": "monticello",
@@ -2755,7 +3257,21 @@ window.PLANTS = [
 "nrc_location": "35 miles NW of Minneapolis, MN",
 "license_expires_year": 2030
 }
-]
+],
+"grid": {
+"ba_code": "MISO",
+"ba_name": "Midcontinent ISO",
+"ba_name_eia": "Midcontinent Independent Transmission System Operator, Inc",
+"rto": "MISO",
+"region": "Midcontinent ISO",
+"interconnection": "Eastern",
+"nerc_region": "MRO",
+"eia_plant_id": [
+1922
+],
+"eia_name": "Monticello Nuclear Facility",
+"eia_860_year": 2025
+}
 },
 {
 "id": "nine-mile-point",
@@ -2825,7 +3341,21 @@ window.PLANTS = [
 "nrc_location": "6 miles NE of Oswego, NY",
 "license_expires_year": 2046
 }
-]
+],
+"grid": {
+"ba_code": "NYIS",
+"ba_name": "New York ISO",
+"ba_name_eia": "New York Independent System Operator",
+"rto": "NYISO",
+"region": "New York ISO",
+"interconnection": "Eastern",
+"nerc_region": "NPCC",
+"eia_plant_id": [
+2589
+],
+"eia_name": "Nine Mile Point Nuclear Station",
+"eia_860_year": 2025
+}
 },
 {
 "id": "north-anna",
@@ -2895,7 +3425,21 @@ window.PLANTS = [
 "nrc_location": "40 miles NW of Richmond, VA",
 "license_expires_year": 2040
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+6168
+],
+"eia_name": "North Anna",
+"eia_860_year": 2025
+}
 },
 {
 "id": "oconee",
@@ -2984,7 +3528,21 @@ window.PLANTS = [
 "nrc_location": "30 miles W of Greenville, SC",
 "license_expires_year": 2034
 }
-]
+],
+"grid": {
+"ba_code": "DUK",
+"ba_name": "Duke Energy Carolinas",
+"ba_name_eia": "Duke Energy Carolinas",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+3265
+],
+"eia_name": "Oconee",
+"eia_860_year": 2025
+}
 },
 {
 "id": "oyster-creek",
@@ -3029,7 +3587,21 @@ window.PLANTS = [
 "commercial_operation": "23 Dec 1969",
 "closed": "17 Sep 2018"
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+2388
+],
+"eia_name": "Oyster Creek",
+"eia_860_year": 2025
+}
 },
 {
 "id": "palisades",
@@ -3105,7 +3677,21 @@ window.PLANTS = [
 "commercial_operation": "",
 "closed": ""
 }
-]
+],
+"grid": {
+"ba_code": "MISO",
+"ba_name": "Midcontinent ISO",
+"ba_name_eia": "Midcontinent Independent Transmission System Operator, Inc",
+"rto": "MISO",
+"region": "Midcontinent ISO",
+"interconnection": "Eastern",
+"nerc_region": "REC",
+"eia_plant_id": [
+1715
+],
+"eia_name": "Palisades",
+"eia_860_year": 2025
+}
 },
 {
 "id": "palo-verde",
@@ -3194,7 +3780,21 @@ window.PLANTS = [
 "nrc_location": "50 miles W of Phoenix, AZ",
 "license_expires_year": 2047
 }
-]
+],
+"grid": {
+"ba_code": "SRP",
+"ba_name": "Salt River Project",
+"ba_name_eia": "Salt River Project",
+"rto": null,
+"region": "West · no RTO",
+"interconnection": "Western",
+"nerc_region": "WECC",
+"eia_plant_id": [
+6008
+],
+"eia_name": "Palo Verde",
+"eia_860_year": 2025
+}
 },
 {
 "id": "parr",
@@ -3239,7 +3839,8 @@ window.PLANTS = [
 "commercial_operation": "18 Dec 1963",
 "closed": "10 Jan 1967"
 }
-]
+],
+"grid": null
 },
 {
 "id": "pathfinder",
@@ -3284,7 +3885,8 @@ window.PLANTS = [
 "commercial_operation": "1 Aug 1966",
 "closed": "1 Oct 1967"
 }
-]
+],
+"grid": null
 },
 {
 "id": "peach-bottom",
@@ -3368,7 +3970,21 @@ window.PLANTS = [
 "nrc_location": "17.9 miles S of Lancaster, PA",
 "license_expires_year": 2054
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+3166
+],
+"eia_name": "Peach Bottom",
+"eia_860_year": 2025
+}
 },
 {
 "id": "perry",
@@ -3419,7 +4035,21 @@ window.PLANTS = [
 "nrc_location": "35 miles NE of Cleveland, OH",
 "license_expires_year": 2026
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+6020
+],
+"eia_name": "Perry",
+"eia_860_year": 2025
+}
 },
 {
 "id": "phipps-bend",
@@ -3477,7 +4107,8 @@ window.PLANTS = [
 "commercial_operation": "",
 "closed": "6 Aug 1981"
 }
-]
+],
+"grid": null
 },
 {
 "id": "pilgrim",
@@ -3522,7 +4153,21 @@ window.PLANTS = [
 "commercial_operation": "9 Dec 1972",
 "closed": "31 May 2019"
 }
-]
+],
+"grid": {
+"ba_code": "ISNE",
+"ba_name": "ISO New England",
+"ba_name_eia": "ISO New England Inc",
+"rto": "ISO-NE",
+"region": "ISO New England",
+"interconnection": "Eastern",
+"nerc_region": "NPCC",
+"eia_plant_id": [
+1590
+],
+"eia_name": "Pilgrim Nuclear Power Station",
+"eia_860_year": 2019
+}
 },
 {
 "id": "piqua",
@@ -3567,7 +4212,8 @@ window.PLANTS = [
 "commercial_operation": "1 Nov 1963",
 "closed": "1 Jan 1966"
 }
-]
+],
+"grid": null
 },
 {
 "id": "point-beach",
@@ -3637,7 +4283,21 @@ window.PLANTS = [
 "nrc_location": "13 miles NNW of Manitowoc, WI",
 "license_expires_year": 2033
 }
-]
+],
+"grid": {
+"ba_code": "MISO",
+"ba_name": "Midcontinent ISO",
+"ba_name_eia": "Midcontinent Independent Transmission System Operator, Inc",
+"rto": "MISO",
+"region": "Midcontinent ISO",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+4046
+],
+"eia_name": "Point Beach Nuclear Plant",
+"eia_860_year": 2025
+}
 },
 {
 "id": "prairie-island",
@@ -3707,7 +4367,21 @@ window.PLANTS = [
 "nrc_location": "28 miles SE of Minneapolis, MN",
 "license_expires_year": 2034
 }
-]
+],
+"grid": {
+"ba_code": "MISO",
+"ba_name": "Midcontinent ISO",
+"ba_name_eia": "Midcontinent Independent Transmission System Operator, Inc",
+"rto": "MISO",
+"region": "Midcontinent ISO",
+"interconnection": "Eastern",
+"nerc_region": "MRO",
+"eia_plant_id": [
+1925
+],
+"eia_name": "Prairie Island",
+"eia_860_year": 2025
+}
 },
 {
 "id": "quad-cities",
@@ -3777,7 +4451,21 @@ window.PLANTS = [
 "nrc_location": "20 miles NE of Moline, IL",
 "license_expires_year": 2032
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+880
+],
+"eia_name": "Quad Cities Generating Station",
+"eia_860_year": 2025
+}
 },
 {
 "id": "rancho-seco",
@@ -3822,7 +4510,8 @@ window.PLANTS = [
 "commercial_operation": "17 Apr 1975",
 "closed": "23 Jun 1989"
 }
-]
+],
+"grid": null
 },
 {
 "id": "river-bend",
@@ -3873,7 +4562,21 @@ window.PLANTS = [
 "nrc_location": "24 miles NNW of Baton Rouge, LA",
 "license_expires_year": 2045
 }
-]
+],
+"grid": {
+"ba_code": "MISO",
+"ba_name": "Midcontinent ISO",
+"ba_name_eia": "Midcontinent Independent Transmission System Operator, Inc",
+"rto": "MISO",
+"region": "Midcontinent ISO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+6462
+],
+"eia_name": "River Bend",
+"eia_860_year": 2025
+}
 },
 {
 "id": "salem",
@@ -3943,7 +4646,21 @@ window.PLANTS = [
 "nrc_location": "18 miles S of Wilmington, DE",
 "license_expires_year": 2040
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+2410
+],
+"eia_name": "PSEG Salem Generating Station",
+"eia_860_year": 2025
+}
 },
 {
 "id": "san-onofre",
@@ -4014,7 +4731,21 @@ window.PLANTS = [
 "commercial_operation": "1 Apr 1984",
 "closed": "7 Jun 2013"
 }
-]
+],
+"grid": {
+"ba_code": "CISO",
+"ba_name": "California ISO",
+"ba_name_eia": "California Independent System Operator",
+"rto": "CAISO",
+"region": "California ISO",
+"interconnection": "Western",
+"nerc_region": "WECC",
+"eia_plant_id": [
+360
+],
+"eia_name": "San Onofre Nuclear Generating Station",
+"eia_860_year": 2025
+}
 },
 {
 "id": "saxton",
@@ -4059,7 +4790,8 @@ window.PLANTS = [
 "commercial_operation": "Nov 1961",
 "closed": "May 1972"
 }
-]
+],
+"grid": null
 },
 {
 "id": "seabrook",
@@ -4110,7 +4842,21 @@ window.PLANTS = [
 "nrc_location": "13 miles S of Portsmouth, NH",
 "license_expires_year": 2050
 }
-]
+],
+"grid": {
+"ba_code": "ISNE",
+"ba_name": "ISO New England",
+"ba_name_eia": "ISO New England Inc",
+"rto": "ISO-NE",
+"region": "ISO New England",
+"interconnection": "Eastern",
+"nerc_region": "NPCC",
+"eia_plant_id": [
+6115
+],
+"eia_name": "Seabrook",
+"eia_860_year": 2025
+}
 },
 {
 "id": "sequoyah",
@@ -4180,7 +4926,21 @@ window.PLANTS = [
 "nrc_location": "16 miles NE of Chattanooga, TN",
 "license_expires_year": 2041
 }
-]
+],
+"grid": {
+"ba_code": "TVA",
+"ba_name": "Tennessee Valley Authority",
+"ba_name_eia": "Tennessee Valley Authority",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+6152
+],
+"eia_name": "Sequoyah",
+"eia_860_year": 2025
+}
 },
 {
 "id": "shearon-harris",
@@ -4231,7 +4991,21 @@ window.PLANTS = [
 "nrc_location": "20 miles SW of Raleigh, NC",
 "license_expires_year": 2046
 }
-]
+],
+"grid": {
+"ba_code": "CPLE",
+"ba_name": "Duke Energy Progress East",
+"ba_name_eia": "Duke Energy Progress East",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+6015
+],
+"eia_name": "Harris (NC)",
+"eia_860_year": 2025
+}
 },
 {
 "id": "shippingport",
@@ -4276,7 +5050,8 @@ window.PLANTS = [
 "commercial_operation": "26 May 1958",
 "closed": "Dec 1989"
 }
-]
+],
+"grid": null
 },
 {
 "id": "shoreham",
@@ -4321,7 +5096,8 @@ window.PLANTS = [
 "commercial_operation": "1 Aug 1986",
 "closed": "1 May 1989"
 }
-]
+],
+"grid": null
 },
 {
 "id": "sre",
@@ -4366,7 +5142,8 @@ window.PLANTS = [
 "commercial_operation": "12 Jul 1957",
 "closed": "15 Feb 1964"
 }
-]
+],
+"grid": null
 },
 {
 "id": "south-texas",
@@ -4436,7 +5213,21 @@ window.PLANTS = [
 "nrc_location": "90 miles SW of Houston, TX",
 "license_expires_year": 2048
 }
-]
+],
+"grid": {
+"ba_code": "ERCO",
+"ba_name": "ERCOT",
+"ba_name_eia": "Electric Reliability Council of Texas, Inc",
+"rto": "ERCOT",
+"region": "ERCOT",
+"interconnection": "Texas",
+"nerc_region": "TRE",
+"eia_plant_id": [
+6251
+],
+"eia_name": "South Texas Project",
+"eia_860_year": 2025
+}
 },
 {
 "id": "st-lucie",
@@ -4506,7 +5297,21 @@ window.PLANTS = [
 "nrc_location": "10 miles SE of Ft. Pierce, FL",
 "license_expires_year": 2043
 }
-]
+],
+"grid": {
+"ba_code": "FPL",
+"ba_name": "Florida Power & Light",
+"ba_name_eia": "Florida Power & Light Company",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+6045
+],
+"eia_name": "St Lucie",
+"eia_860_year": 2025
+}
 },
 {
 "id": "surry",
@@ -4576,7 +5381,21 @@ window.PLANTS = [
 "nrc_location": "17 miles NW of Newport News, VA",
 "license_expires_year": 2053
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+3806
+],
+"eia_name": "Surry",
+"eia_860_year": 2025
+}
 },
 {
 "id": "susquehanna",
@@ -4646,7 +5465,21 @@ window.PLANTS = [
 "nrc_location": "70 miles NE of Harrisburg, PA",
 "license_expires_year": 2044
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+6103
+],
+"eia_name": "TalenEnergy Susquehanna",
+"eia_860_year": 2025
+}
 },
 {
 "id": "three-mile-island",
@@ -4704,7 +5537,21 @@ window.PLANTS = [
 "commercial_operation": "30 Dec 1978",
 "closed": "28 Mar 1979"
 }
-]
+],
+"grid": {
+"ba_code": "PJM",
+"ba_name": "PJM Interconnection",
+"ba_name_eia": "PJM Interconnection, LLC",
+"rto": "PJM",
+"region": "PJM Interconnection",
+"interconnection": "Eastern",
+"nerc_region": "RFC",
+"eia_plant_id": [
+8011
+],
+"eia_name": "Crane Clean Energy Center",
+"eia_860_year": 2025
+}
 },
 {
 "id": "trojan",
@@ -4749,7 +5596,8 @@ window.PLANTS = [
 "commercial_operation": "20 May 1976",
 "closed": "9 Nov 1992"
 }
-]
+],
+"grid": null
 },
 {
 "id": "turkey-point",
@@ -4819,7 +5667,21 @@ window.PLANTS = [
 "nrc_location": "20 miles S of Miami, FL",
 "license_expires_year": 2053
 }
-]
+],
+"grid": {
+"ba_code": "FPL",
+"ba_name": "Florida Power & Light",
+"ba_name_eia": "Florida Power & Light Company",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+621
+],
+"eia_name": "Turkey Point",
+"eia_860_year": 2025
+}
 },
 {
 "id": "vallecitos",
@@ -4864,7 +5726,8 @@ window.PLANTS = [
 "commercial_operation": "19 Oct 1957",
 "closed": "9 Dec 1963"
 }
-]
+],
+"grid": null
 },
 {
 "id": "vermont-yankee",
@@ -4909,7 +5772,21 @@ window.PLANTS = [
 "commercial_operation": "30 Nov 1972",
 "closed": "29 Dec 2014"
 }
-]
+],
+"grid": {
+"ba_code": "ISNE",
+"ba_name": "ISO New England",
+"ba_name_eia": "ISO New England Inc",
+"rto": "ISO-NE",
+"region": "ISO New England",
+"interconnection": "Eastern",
+"nerc_region": "NPCC",
+"eia_plant_id": [
+3751
+],
+"eia_name": "Vermont Yankee",
+"eia_860_year": 2014
+}
 },
 {
 "id": "virgil-c-summer",
@@ -4986,7 +5863,21 @@ window.PLANTS = [
 "commercial_operation": "",
 "closed": ""
 }
-]
+],
+"grid": {
+"ba_code": "SCEG",
+"ba_name": "Dominion Energy South Carolina",
+"ba_name_eia": "Dominion Energy South Carolina",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+6127
+],
+"eia_name": "V C Summer",
+"eia_860_year": 2025
+}
 },
 {
 "id": "vogtle",
@@ -5094,7 +5985,21 @@ window.PLANTS = [
 "nrc_location": "26 miles SE of Augusta, GA",
 "license_expires_year": 2063
 }
-]
+],
+"grid": {
+"ba_code": "SOCO",
+"ba_name": "Southern Company",
+"ba_name_eia": "Southern Company Services, Inc. - Trans",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+649
+],
+"eia_name": "Vogtle",
+"eia_860_year": 2025
+}
 },
 {
 "id": "waterford",
@@ -5145,7 +6050,21 @@ window.PLANTS = [
 "nrc_location": "25 miles W of New Orleans, LA",
 "license_expires_year": 2044
 }
-]
+],
+"grid": {
+"ba_code": "MISO",
+"ba_name": "Midcontinent ISO",
+"ba_name_eia": "Midcontinent Independent Transmission System Operator, Inc",
+"rto": "MISO",
+"region": "Midcontinent ISO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+4270
+],
+"eia_name": "Waterford 3",
+"eia_860_year": 2025
+}
 },
 {
 "id": "watts-bar",
@@ -5215,7 +6134,21 @@ window.PLANTS = [
 "nrc_location": "60 miles SW of Knoxville, TN",
 "license_expires_year": 2055
 }
-]
+],
+"grid": {
+"ba_code": "TVA",
+"ba_name": "Tennessee Valley Authority",
+"ba_name_eia": "Tennessee Valley Authority",
+"rto": null,
+"region": "Southeast · no RTO",
+"interconnection": "Eastern",
+"nerc_region": "SERC",
+"eia_plant_id": [
+7722
+],
+"eia_name": "Watts Bar Nuclear Plant",
+"eia_860_year": 2025
+}
 },
 {
 "id": "wolf-creek",
@@ -5266,7 +6199,21 @@ window.PLANTS = [
 "nrc_location": "3.5 miles NE of Burlington, KS",
 "license_expires_year": 2045
 }
-]
+],
+"grid": {
+"ba_code": "SWPP",
+"ba_name": "Southwest Power Pool",
+"ba_name_eia": "Southwest Power Pool",
+"rto": "SPP",
+"region": "Southwest Power Pool",
+"interconnection": "Eastern",
+"nerc_region": "MRO",
+"eia_plant_id": [
+210
+],
+"eia_name": "Wolf Creek Generating Station",
+"eia_860_year": 2025
+}
 },
 {
 "id": "yankee-rowe",
@@ -5311,7 +6258,8 @@ window.PLANTS = [
 "commercial_operation": "1 Jul 1961",
 "closed": "1 Oct 1991"
 }
-]
+],
+"grid": null
 },
 {
 "id": "zion",
@@ -5369,6 +6317,7 @@ window.PLANTS = [
 "commercial_operation": "17 Sep 1974",
 "closed": "13 Feb 1998"
 }
-]
+],
+"grid": null
 }
 ];

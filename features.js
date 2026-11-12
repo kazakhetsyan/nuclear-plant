@@ -25,6 +25,7 @@ var ICON={
  close:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
  rings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/></svg>',
  compare:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="7" height="14" rx="1.5"/><rect x="14" y="5" width="7" height="14" rx="1.5"/></svg>',
+ grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>',
  share:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>'
 };
 
@@ -210,10 +211,13 @@ function openStats(){
  var types=Object.keys(byType).map(function(k){return [k,byType[k],k==='PWR'?'#22d3ee':k==='BWR'?'#a78bfa':'#94a3b8'];}).sort(function(a,b){return b[1]-a[1];});
  var decs=Object.keys(byDec).sort().map(function(k){return [k+'s',byDec[k],'#34d399'];});
  var sts=Object.keys(APP.STATUS).filter(function(k){return bySt[k];}).map(function(k){return [k,bySt[k],APP.STATUS[k].hex];});
+ var byBA={}; P.forEach(function(p){ var g=gridOf(p), c=opCap(p); if(g&&c){ var k=g.rto||g.ba_name; byBA[k]=(byBA[k]||0)+c; } });
+ var gridBars=Object.keys(byBA).map(function(k){return [k,byBA[k],RTO[k]?RTO[k].c:'#94a3b8'];}).sort(function(a,b){return b[1]-a[1];}).slice(0,10);
  var totalOp=P.reduce(function(a,p){return a+opCap(p);},0), reactors=P.reduce(function(a,p){return a+p.units.filter(function(u){return u.status==='Operational';}).length;},0);
  var html='<div class="fkpis"><div><b>'+fmt(totalOp/1000)+' GW</b><small>operating capacity</small></div><div><b>'+reactors+'</b><small>operating reactors</small></div><div><b>'+Object.keys(byState).length+'</b><small>states with plants</small></div></div>'+
   '<h4>Operating capacity by state · top 10</h4>'+bars(states,{fmt:function(v){return fmt(v)+' MW';}})+
   '<div class="fgrid2"><div><h4>Operating reactors by type</h4>'+bars(types)+'</div><div><h4>Plant status</h4>'+donut(sts)+'</div></div>'+
+  (gridBars.length?'<h4>Operating nuclear capacity by grid operator</h4>'+bars(gridBars,{fmt:function(v){return fmt(v)+' MW';}}):'')+
   '<h4>Plants by decade of first commercial operation</h4>'+bars(decs)+
   '<p class="fnote">Based on the map dataset ('+P.length+' plant sites). Capacity is net MW of currently operating plants.</p>';
  openSheet('Fleet statistics',html,'stats');
@@ -305,6 +309,7 @@ function compareRows(a){
   'Technology':esc(a.reactor_types.join(' + '))||'—',
   'Vendor':esc(vendors(a))||'—',
   'License expires':li.kind==='ok'?(li.first===li.last?li.first:li.first+'–'+li.last):'<small>'+esc(li.text)+'</small>',
+  'Feeds (grid)':gridOf(a)?esc(gridOf(a).ba_name)+' <small>('+esc(gridOf(a).interconnection)+')</small>':'<small>Not in EIA-860</small>',
   'State':esc(a.state)
  };
 }
@@ -341,6 +346,8 @@ function panelExtras(p){
   if(RINGS.pid===p.id){ $('.fa-rings',acts).classList.add('on'); note.classList.add('show'); }
  });
  var facts=$('.facts',pc); var anchor=facts||$('.sub',pc);
+ // grid operator (EIA-860)
+ safe('feeds',function(){ var a=$('.fringnote',pc)||$('.facts-acts',pc)||$('.sub',pc); if(a) gridFeedsBox(p,a); });
  // license countdown
  safe('license',function(){
   var li=licenseInfo(p), box=el('div','flic');
@@ -364,10 +371,114 @@ function panelExtras(p){
  });
 }
 
+
+/* ---------- Grid: who each plant feeds + ISO/RTO regions ---------- */
+var GRID_INFO='A <b>grid operator</b> (balancing authority) keeps electricity supply and demand in balance, minute by minute, over its part of the grid and tells power plants how much to generate. <b>ISOs/RTOs</b> such as PJM, MISO or ERCOT do this for many utilities at once and run wholesale power markets; elsewhere (much of the Southeast and West) a utility such as TVA or Duke runs its own area. The lower 48 are split into three <b>interconnections</b> (Eastern, Western, Texas) with only small links between them. Source: EIA-860 plant data.';
+var RTO={
+ 'PJM':{name:'PJM Interconnection',c:'#60a5fa'},
+ 'MISO':{name:'Midcontinent ISO (MISO)',c:'#c084fc'},
+ 'SPP':{name:'Southwest Power Pool (SPP)',c:'#fb923c'},
+ 'ERCOT':{name:'ERCOT (Texas)',c:'#f472b6'},
+ 'CAISO':{name:'California ISO (CAISO)',c:'#facc15'},
+ 'NYISO':{name:'New York ISO (NYISO)',c:'#2dd4bf'},
+ 'ISO-NE':{name:'ISO New England',c:'#a3e635'}
+};
+function gridOf(p){ return p&&p.grid&&p.grid.ba_name?p.grid:null; }
+function feedVerb(p){ return /Shut/.test(p.status)?'Fed':/Planned|Never/.test(p.status)?'Will feed':'Feeds'; }
+function feedsText(g){ return g.ba_name+' ('+g.interconnection+' Interconnection)'; }
+function regionStats(code){
+ var list=APP.plants.filter(function(p){ var g=gridOf(p); return g&&(code==='none'?!g.rto:g.rto===code); });
+ var op=list.filter(function(p){return p.status==='Operating';});
+ return {list:list,op:op,mw:op.reduce(function(a,p){return a+opCap(p);},0)};
+}
+function gridFeedsBox(p,anchor){
+ var g=gridOf(p);
+ if(!g) return anchor; // not found in EIA-860: show nothing
+ var box=el('div','ffeeds');
+ var meta=(g.rto?'RTO/ISO: '+esc(g.rto)+' · ':(g.region?esc(g.region)+' · ':''))+'EIA-860 '+g.eia_860_year+', plant ID '+g.eia_plant_id.join(' / ');
+ box.innerHTML='<div class="ffr"><span class="ffk">'+feedVerb(p)+'</span><span class="ffv">'+(g.rto&&RTO[g.rto]?'<span class="dot" style="background:'+RTO[g.rto].c+';color:'+RTO[g.rto].c+'"></span>':'')+'<b>'+esc(g.ba_name)+'</b> <small>('+esc(g.interconnection)+' Interconnection)</small></span>'+
+  '<details class="ffi"><summary aria-label="What is a grid operator?" title="What is a grid operator?">ⓘ</summary><p>'+GRID_INFO+'</p></details></div><div class="ffm">'+meta+'</div>';
+ box.title='Grid operator (balancing authority) that dispatches this plant, per EIA-860';
+ anchor.parentNode.insertBefore(box,anchor.nextSibling);
+ return box;
+}
+var GRID={on:false,layer:null,labels:null,data:null,loading:false,lg:null,filter:null};
+function gridLoad(cb){
+ if(GRID.data) return cb(GRID.data);
+ if(GRID.loading) return; GRID.loading=true;
+ var x=new XMLHttpRequest(); x.open('GET','data/grid-regions.geojson?v=20261112g'); x.timeout=20000;
+ x.onload=function(){ GRID.loading=false; if(x.status>=200&&x.status<300){ try{ GRID.data=JSON.parse(x.responseText); }catch(e){ GRID.data=null; } } if(GRID.data) cb(GRID.data); else { toast('Grid regions failed to load.'); gridToggle(false); } };
+ x.onerror=x.ontimeout=function(){ GRID.loading=false; toast('Grid regions failed to load. Check your connection.'); gridToggle(false); };
+ x.send();
+}
+function regionPopup(code){
+ var s=regionStats(code), r=RTO[code];
+ var names=s.op.map(function(p){return p.name;}).sort();
+ var other=s.list.length-s.op.length;
+ return '<div class="fgpop"><div class="fgpt"><span class="dot" style="background:'+r.c+';color:'+r.c+'"></span><b>'+esc(r.name)+'</b></div>'+
+  '<div class="fgpn"><b>'+s.op.length+'</b> operating nuclear plant'+(s.op.length===1?'':'s')+' feed it · <b>'+fmt(s.mw)+' MW</b></div>'+
+  (names.length?'<div class="fgpl">'+names.map(esc).join(' · ')+'</div>':'')+
+  (other?'<div class="fgpo">+ '+other+' shut down / planned plant'+(other===1?'':'s')+' listed here in EIA-860</div>':'')+
+  '<button type="button" class="fgpf" data-code="'+esc(code)+'">'+(GRID.filter===code?'Show all plants':'Show only these plants')+'</button></div>';
+}
+function gridFilter(code){
+ GRID.filter=code||null;
+ APP.filters=APP.filters||{};
+ APP.filters.grid=GRID.filter?function(p){ var g=gridOf(p); return !!g&&(GRID.filter==='none'?!g.rto:g.rto===GRID.filter); }:null;
+ APP.applyFilters(); gridLegend();
+ if(GRID.filter){ var nm=GRID.filter==='none'?'No RTO / utility-run':RTO[GRID.filter].name; toast('Showing plants feeding '+nm); }
+}
+function gridLegend(){
+ if(!GRID.lg){
+  GRID.lg=el('div','fgridlg glass'); document.getElementById('main').appendChild(GRID.lg);
+  L.DomEvent.disableClickPropagation(GRID.lg); L.DomEvent.disableScrollPropagation(GRID.lg);
+  GRID.lg.addEventListener('click',function(e){ var b=e.target.closest?e.target.closest('[data-f]'):null; if(b){ e.preventDefault(); var c=b.getAttribute('data-f'); safe('grid-filter',function(){ gridFilter(GRID.filter===c||c==='all'?null:c); }); } if(e.target.closest&&e.target.closest('.fglx')) gridToggle(false); });
+ }
+ var rows=Object.keys(RTO).map(function(k){ var s=regionStats(k); return '<button type="button" data-f="'+k+'" class="'+(GRID.filter===k?'on':'')+'"><span class="sw" style="background:'+RTO[k].c+'"></span>'+esc(k)+'<em>'+s.op.length+'</em></button>'; }).join('');
+ var none=regionStats('none');
+ GRID.lg.innerHTML='<div class="fglh"><span>Grid regions (ISO/RTO)</span><button type="button" class="fglx" aria-label="Hide grid regions">'+ICON.close+'</button></div><div class="fglg">'+rows+
+  '<button type="button" data-f="none" class="'+(GRID.filter==='none'?'on':'')+'"><span class="sw none"></span>No RTO<em>'+none.op.length+'</em></button></div>'+
+  '<div class="fgln">Numbers = operating plants feeding each. Unshaded areas: no RTO, utility-run. Tap a region or chip to filter.'+(GRID.filter?' <a href="#" data-f="all">Show all</a>':'')+'</div>';
+}
+function gridToggle(on){
+ GRID.on=on; setToolState('grid',on);
+ document.body.classList.toggle('grid-on',on);
+ if(!on){
+  if(GRID.layer){ APP.map.removeLayer(GRID.layer); APP.map.removeLayer(GRID.labels); }
+  if(GRID.filter) gridFilter(null);
+  if(GRID.lg) GRID.lg.classList.remove('show');
+  return;
+ }
+ gridLoad(function(data){ safe('grid-layer',function(){
+  if(!GRID.on) return;
+  if(!GRID.layer){
+   if(!APP.map.getPane('gridPane')){ var pn=APP.map.createPane('gridPane'); pn.style.zIndex=350; }
+   GRID.layer=L.geoJSON(data,{pane:'gridPane',smoothFactor:1.5,
+    style:function(f){ var r=RTO[f.properties.code]||{c:'#94a3b8'}; return {color:r.c,weight:1.2,opacity:.75,fillColor:r.c,fillOpacity:.13}; },
+    onEachFeature:function(f,ly){
+     var code=f.properties.code;
+     ly.on('click',function(e){ safe('grid-popup',function(){
+      L.popup({className:'fgpopup',maxWidth:280,autoPanPadding:[20,90]}).setLatLng(e.latlng).setContent(regionPopup(code)).openOn(APP.map);
+      var b=document.querySelector('.fgpf[data-code="'+code+'"]'); if(b) b.addEventListener('click',function(){ APP.map.closePopup(); gridFilter(GRID.filter===code?null:code); });
+     }); });
+     ly.on('mouseover',function(){ ly.setStyle({fillOpacity:.24,weight:2}); });
+     ly.on('mouseout',function(){ GRID.layer.resetStyle(ly); });
+    }});
+   GRID.labels=L.layerGroup(data.features.map(function(f){
+    var r=RTO[f.properties.code]||{c:'#fff'};
+    return L.marker([f.properties.ly,f.properties.lx],{pane:'gridPane',interactive:false,keyboard:false,icon:L.divIcon({className:'fgridlbl',html:'<span style="color:'+r.c+';border-color:'+r.c+'55">'+esc(f.properties.code)+'</span>',iconSize:[0,0]})});
+   }));
+  }
+  GRID.layer.addTo(APP.map); GRID.labels.addTo(APP.map);
+  gridLegend(); GRID.lg.classList.add('show');
+ }); });
+}
+APP.grid={toggle:gridToggle,filter:gridFilter,stats:regionStats};
+
 /* ---------- about: assumptions & sources ---------- */
 function aboutExtras(){
  var ab=document.getElementById('aboutBox'); if(!ab||ab.querySelector('.fabout')) return;
- var d=el('div','fabout','<b>Estimates &amp; zones</b><ul style="padding-left:18px;margin:4px 0"><li>Homes powered / CO₂ avoided are estimates: capacity × 8,760 h × 90% capacity factor; 10,500 kWh per home per year; 0.4 kg CO₂ per kWh.</li><li><a href="https://www.eia.gov/tools/faqs/faq.php?id=97&amp;t=3" target="_blank" rel="noopener">EIA – average US household electricity use</a></li><li><a href="https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=epmt_6_07_b" target="_blank" rel="noopener">EIA – capacity factors by fuel (nuclear ≈ 90%+)</a></li><li><a href="https://www.eia.gov/tools/faqs/faq.php?id=74&amp;t=11" target="_blank" rel="noopener">EIA – CO₂ emitted per kWh of US electricity</a></li><li><a href="https://www.nrc.gov/about-nrc/emerg-preparedness/about-emerg-preparedness/planning-zones.html" target="_blank" rel="noopener">NRC – emergency planning zones (10-mile and 50-mile)</a></li></ul>');
+ var d=el('div','fabout','<b>Estimates &amp; zones</b><ul style="padding-left:18px;margin:4px 0"><li>Homes powered / CO₂ avoided are estimates: capacity × 8,760 h × 90% capacity factor; 10,500 kWh per home per year; 0.4 kg CO₂ per kWh.</li><li><a href="https://www.eia.gov/tools/faqs/faq.php?id=97&amp;t=3" target="_blank" rel="noopener">EIA – average US household electricity use</a></li><li><a href="https://www.eia.gov/electricity/monthly/epm_table_grapher.php?t=epmt_6_07_b" target="_blank" rel="noopener">EIA – capacity factors by fuel (nuclear ≈ 90%+)</a></li><li><a href="https://www.eia.gov/tools/faqs/faq.php?id=74&amp;t=11" target="_blank" rel="noopener">EIA – CO₂ emitted per kWh of US electricity</a></li><li><a href="https://www.nrc.gov/about-nrc/emerg-preparedness/about-emerg-preparedness/planning-zones.html" target="_blank" rel="noopener">NRC – emergency planning zones (10-mile and 50-mile)</a></li></ul><b>Grid operators</b><ul style="padding-left:18px;margin:4px 0"><li>“Feeds” = the plant’s balancing authority from the <a href="https://www.eia.gov/electricity/data/eia860/" target="_blank" rel="noopener">EIA-860 Plant file</a> (2025 data; 2013–2021 files for plants retired since). Plants that closed before EIA began reporting balancing authorities (2013) show no grid.</li><li>ISO/RTO regions: <a href="https://www.pasda.psu.edu/uci/DataSummary.aspx?dataset=9103" target="_blank" rel="noopener">HIFLD Independent System Operators</a> (Oak Ridge National Laboratory, 2020 boundaries), simplified. Boundaries are approximate service areas.</li></ul>');
  var note=ab.querySelector('.note'); ab.insertBefore(d,note||null);
 }
 
@@ -379,6 +490,7 @@ function init(){
   addTool('near',ICON.loc,'Nearest to me',locate);
   addTool('heat',ICON.heat,'Heat map',function(){ heatToggle(!HEAT.on); });
   addTool('stats',ICON.stats,'Statistics',openStats);
+  addTool('grid',ICON.grid,'Grid regions',function(){ gridToggle(!GRID.on); });
   addTool('tour',ICON.tour,'Tour',tourStart);
  });
  APP.hooks.render.push(function(p){ panelExtras(p); if(RINGS.pid&&RINGS.pid!==p.id) ringsOff(); });
