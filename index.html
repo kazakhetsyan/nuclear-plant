@@ -161,6 +161,12 @@ h3:after{content:"";flex:1;height:1px;background:var(--line)}
 .links a{display:inline-block;font-size:12.5px;font-weight:500;color:var(--ink2);text-decoration:none;padding:6px 12px;border:1px solid var(--line2);border-radius:999px;transition:background .25s,border-color .25s,color .25s,box-shadow .25s}
 .links a:hover{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink);box-shadow:0 0 18px -6px rgba(34,211,238,.6)}
 .note{font-size:11.5px;color:var(--muted);line-height:1.5}
+/* satellite fallback */
+.ph.sat img{filter:saturate(.95) contrast(1.04)}
+.satpin{position:absolute;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:2px solid var(--accent);box-shadow:0 0 0 4px rgba(34,211,238,.18),0 0 18px rgba(34,211,238,.6);z-index:2;opacity:0;transition:opacity .6s ease .3s;pointer-events:none}
+.satpin:after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:var(--accent)}
+.ph.loaded .satpin{opacity:1}
+.satlbl{position:absolute;left:12px;top:12px;z-index:2;font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);padding:4px 9px;border-radius:999px;background:rgba(10,13,19,.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--line2)}
 /* about */
 #about{position:absolute;left:12px;bottom:28px;z-index:900;animation:fade .8s var(--ease) both .7s}
 #about button{font:inherit;font-size:12.5px;font-weight:500;color:var(--ink2);border-radius:999px;padding:7px 14px;cursor:pointer;transition:color .2s,border-color .2s,transform .3s var(--ease)}
@@ -342,10 +348,24 @@ function unitHtml(u){
  const bg=UNIT_COLORS[u.status]||(/Unfinished|Cancel/.test(u.status)?'rgba(167,139,250,.14);color:#c4b5fd':'rgba(248,113,113,.12);color:#fca5a5');
  return '<div class="unit"><div class="uh"><span>'+esc(u.nrc_name||('Unit '+u.unit))+'</span><span class="us" style="background:'+bg+'">'+esc(u.status)+'</span></div><table>'+rows.filter(r=>r[1]).map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('')+'</table></div>';
 }
+// satellite fallback for plants without a freely licensed photo (Esri World Imagery export, 16:10, ~0.6 km wide)
+// optional view centre when the dataset coordinate sits beside the actual generating site (map marker is unchanged)
+const SAT_CENTER={'elk-river':[45.29677,-93.55490]};
+const SAT_GROUND_M=600; // ground width shown across the 960 px image (~0.6 m/px, still sharp)
+function satUrl(p){
+ const c=SAT_CENTER[p.id]||[p.lat,p.lon], lat=c[0], lon=c[1];
+ const R=6378137, x=lon*Math.PI/180*R, y=Math.log(Math.tan(Math.PI/4+lat*Math.PI/360))*R;
+ const hw=SAT_GROUND_M/2/Math.cos(lat*Math.PI/180), hh=hw*600/960;
+ return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox='+[x-hw,y-hh,x+hw,y+hh].map(v=>v.toFixed(1)).join(',')+'&bboxSR=3857&imageSR=3857&size=960,600&format=jpg&f=image';
+}
+function satHtml(p){
+ return '<div class="ph sat"><img src="'+esc(satUrl(p))+'" alt="Satellite view of the '+esc(p.name)+' site" decoding="async" referrerpolicy="no-referrer" onload="this.parentNode.classList.add(\'loaded\')" onerror="this.parentNode.classList.add(\'loaded\');this.parentNode.innerHTML=\'<div class=ph-empty><span class=i>☢</span>No freely licensed photo found</div>\'"><span class="satpin"></span><span class="satlbl">Satellite view</span></div>'+
+  '<div class="credit">Satellite view · Imagery © Esri, Maxar, Earthstar Geographics · no freely licensed photo of this plant found</div>';
+}
 function render(p){
  const s=STATUS[p.status];
  const img=p.image?'<div class="ph"><img src="'+esc(p.image.url)+'" alt="'+esc(p.name)+'" decoding="async" referrerpolicy="no-referrer" onload="this.parentNode.classList.add(\'loaded\')" onerror="this.parentNode.classList.add(\'loaded\');this.parentNode.innerHTML=\'<div class=ph-empty><span class=i>☢</span>Photo unavailable</div>\'"></div><div class="credit">Photo: <a href="'+esc(p.image.commons)+'" target="_blank" rel="noopener">'+esc(p.image.artist||p.image.file)+'</a> · '+esc(p.image.license)+' · via Wikimedia Commons</div>'
-  :'<div class="ph loaded"><div class="ph-empty"><span class="i">☢</span>No freely licensed photo found</div></div>';
+  :satHtml(p);
  const caps=p.units.map(u=>parseFloat(String(u.capacity_mw).replace(/,/g,''))).filter(x=>!isNaN(x));
  const totalCap=caps.reduce((a,b)=>a+b,0);
  const facts=[
