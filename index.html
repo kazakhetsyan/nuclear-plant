@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>US Nuclear Power Plants – Interactive Map</title>
+<meta name="description" content="Interactive, zoomable map of every US commercial nuclear power plant: operating, shut down, restarting and planned, with reactor details and photos.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="">
+<style>
+:root{--bg:#0f172a;--panel:#ffffff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;--accent:#0ea5e9;
+--op:#16a34a;--rs:#f59e0b;--pl:#2563eb;--sd:#dc2626;--nc:#7c3aed;}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+#app{position:fixed;inset:0;display:flex;flex-direction:column}
+header{background:var(--bg);color:#fff;padding:10px 14px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;z-index:1001;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+header h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.2px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+header h1 .sym{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;background:#facc15;color:#111;font-size:17px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;flex:1;justify-content:flex-end}
+.controls input,.controls select{font:inherit;font-size:14px;padding:7px 10px;border-radius:8px;border:1px solid #334155;background:#1e293b;color:#fff;outline:none}
+.controls input:focus,.controls select:focus{border-color:var(--accent)}
+#search{width:270px}
+#count{font-size:13px;color:#cbd5e1;white-space:nowrap}
+#main{position:relative;flex:1;min-height:0}
+#map{position:absolute;inset:0;background:#dbe4ee}
+/* legend */
+.legend{background:rgba(255,255,255,.95);padding:10px 12px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.18);font-size:13px;line-height:1.5}
+.legend b{display:block;margin-bottom:4px;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+.legend label{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none}
+.legend input{margin:0}
+.legend .lgh{cursor:pointer;display:flex;justify-content:space-between;gap:10px;margin-bottom:4px}
+.legend.collapsed .lgb{display:none}
+.legend.collapsed .lgh{margin:0}
+.legend.collapsed .car{display:inline-block;transform:rotate(-90deg)}
+.dot{width:12px;height:12px;border-radius:50%;display:inline-block;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+.legend .n{color:var(--muted);margin-left:auto;padding-left:8px}
+/* markers */
+.pm{border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45);display:grid;place-items:center;color:#fff;font-weight:700;font-size:11px;transition:transform .15s}
+.pm:hover{transform:scale(1.18)}
+.pm.sel{box-shadow:0 0 0 4px rgba(14,165,233,.6),0 1px 4px rgba(0,0,0,.45)}
+.cl{background:rgba(15,23,42,.18);border-radius:50%}
+.cl div{width:34px;height:34px;margin:3px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:13px;border:2px solid #fff;box-shadow:0 1px 5px rgba(0,0,0,.4)}
+/* panel */
+#panel{position:absolute;top:0;right:0;bottom:0;width:420px;max-width:100%;background:var(--panel);z-index:1000;box-shadow:-4px 0 18px rgba(0,0,0,.2);transform:translateX(105%);transition:transform .28s ease;display:flex;flex-direction:column}
+#panel.open{transform:none}
+#panel .close{position:absolute;top:10px;right:10px;z-index:2;width:34px;height:34px;border-radius:50%;border:none;background:rgba(15,23,42,.75);color:#fff;font-size:20px;cursor:pointer;line-height:1}
+#pbody{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.ph{position:relative;background:#e2e8f0;aspect-ratio:16/10;overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph .ph-empty{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:14px;text-align:center;padding:20px;background:repeating-linear-gradient(45deg,#e2e8f0,#e2e8f0 12px,#f1f5f9 12px,#f1f5f9 24px)}
+.credit{font-size:11px;color:var(--muted);padding:5px 16px 0}
+.credit a{color:var(--muted)}
+.pc{padding:12px 16px 24px}
+.pc h2{margin:4px 0 2px;font-size:22px;line-height:1.2}
+.sub{color:var(--muted);font-size:14px;margin-bottom:10px}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:600;color:#fff;margin-right:6px}
+.tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:12px;background:#f1f5f9;color:#334155;margin:0 4px 4px 0}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.fact{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.fact .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.fact .v{font-size:15px;font-weight:600;margin-top:2px}
+.kv{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}
+.kv td{padding:6px 0;border-bottom:1px solid var(--line);vertical-align:top}
+.kv td:first-child{color:var(--muted);width:38%;padding-right:10px}
+.desc{font-size:14px;line-height:1.55;color:#334155}
+h3{font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:18px 0 6px}
+.unit{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+.unit .uh{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:700;margin-bottom:4px}
+.unit .us{font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;background:#f1f5f9}
+.unit table{width:100%;font-size:13px;border-collapse:collapse}
+.unit td{padding:2px 0;vertical-align:top}
+.unit td:first-child{color:var(--muted);width:44%}
+.links a{display:inline-block;margin:4px 8px 0 0;font-size:14px;color:#0369a1}
+.note{font-size:12px;color:var(--muted);line-height:1.45}
+#about{position:absolute;left:10px;bottom:24px;z-index:900}
+#about button{font:inherit;font-size:13px;background:rgba(255,255,255,.95);border:none;border-radius:8px;padding:7px 11px;box-shadow:0 2px 10px rgba(0,0,0,.18);cursor:pointer}
+#aboutBox{display:none;position:absolute;left:0;bottom:40px;width:340px;max-width:calc(100vw - 20px);background:#fff;border-radius:10px;padding:12px 14px;box-shadow:0 4px 18px rgba(0,0,0,.25);font-size:13px;line-height:1.5}
+#aboutBox.show{display:block}
+#aboutBox a{color:#0369a1}
+.leaflet-popup-content{margin:8px 12px;font-size:13px}
+@media (max-width:720px){
+ header{padding:8px 10px}
+ header h1{font-size:15px}
+ .controls{justify-content:flex-start}
+ #search{flex:1 1 100%;width:auto}
+ .controls select{flex:1;min-width:0}
+ #count{font-size:12px}
+ #panel{top:auto;width:100%;height:62%;border-radius:16px 16px 0 0;transform:translateY(105%)}
+ #panel.open{transform:none}
+ .legend{font-size:12px;padding:8px 10px}
+ #about{bottom:16px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+ <header>
+  <h1><span class="sym">☢</span>US Nuclear Power Plants</h1>
+  <div class="controls">
+   <input id="search" type="search" placeholder="Search plant, state, operator…" list="plantlist" autocomplete="off" aria-label="Search plants">
+   <datalist id="plantlist"></datalist>
+   <select id="ftype" aria-label="Reactor type"><option value="">All reactor types</option><option value="PWR">PWR – pressurized water</option><option value="BWR">BWR – boiling water</option><option value="OTHER">Other / experimental</option></select>
+   <span id="count"></span>
+  </div>
+ </header>
+ <div id="main">
+  <div id="map"></div>
+  <aside id="panel" aria-live="polite"><button class="close" id="pclose" aria-label="Close">×</button><div id="pbody"></div></aside>
+  <div id="about"><button id="aboutBtn">ⓘ About &amp; sources</button><div id="aboutBox"></div></div>
+ </div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin=""></script>
+<script src="data.js"></script>
+<script>
+(function(){
+const STATUS = {
+ 'Operating':{c:'var(--op)',hex:'#16a34a'},
+ 'Restart in progress':{c:'var(--rs)',hex:'#f59e0b'},
+ 'Planned / under construction':{c:'var(--pl)',hex:'#2563eb'},
+ 'Shut down / decommissioned':{c:'var(--sd)',hex:'#dc2626'},
+ 'Never completed':{c:'var(--nc)',hex:'#7c3aed'}
+};
+const UNIT_COLORS={'Operational':'#dcfce7','Restart in progress':'#fef3c7','Planned':'#dbeafe','Under construction':'#dbeafe'};
+const plants = window.PLANTS || [];
+const esc = s => String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const val = s => (s===null||s===undefined||s==='')?'<span style="color:#94a3b8">—</span>':esc(s);
+
+const map = L.map('map',{zoomControl:false,minZoom:3,maxZoom:18,zoomSnap:0.5,wheelPxPerZoomLevel:90,worldCopyJump:true}).setView([38.5,-96],4.5);
+L.control.zoom({position:'topleft'}).addTo(map);
+const ESRI='https://server.arcgisonline.com/ArcGIS/rest/services/';
+const esriAttr='Tiles &copy; <a href="https://www.esri.com/">Esri</a> &mdash; Esri, HERE, Garmin, USGS, &copy; OpenStreetMap contributors';
+const light = L.layerGroup([
+ L.tileLayer(ESRI+'Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:16,maxNativeZoom:16,attribution:esriAttr}),
+ L.tileLayer(ESRI+'Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',{maxZoom:16,maxNativeZoom:16})
+]);
+const base = {
+ 'Light': light,
+ 'Streets': L.tileLayer(ESRI+'World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:esriAttr}),
+ 'Topographic': L.tileLayer(ESRI+'World_Topo_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:esriAttr}),
+ 'Satellite': L.tileLayer(ESRI+'World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery &copy; Esri, Maxar, Earthstar Geographics'}),
+ 'OpenStreetMap': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'})
+};
+base['Light'].addTo(map);
+// auto-switch to street detail when zoomed far in on the light canvas (it stops at z16)
+map.on('zoomend',()=>{ if(map.getZoom()>16 && map.hasLayer(light)){ map.removeLayer(light); base['Satellite'].addTo(map); } });
+L.control.layers(base,null,{position:'topleft'}).addTo(map);
+L.control.scale({imperial:true,metric:true,position:'bottomright'}).addTo(map);
+
+const cluster = L.markerClusterGroup({showCoverageOnHover:false,maxClusterRadius:45,spiderfyOnMaxZoom:true,disableClusteringAtZoom:9,
+ iconCreateFunction:function(cl){
+  const ms=cl.getAllChildMarkers(); const n=ms.length;
+  const counts={}; ms.forEach(m=>counts[m.plant.status]=(counts[m.plant.status]||0)+1);
+  // conic gradient by status share
+  let acc=0,stops=[];Object.keys(STATUS).forEach(k=>{if(counts[k]){const a=acc/n*360,b=(acc+counts[k])/n*360;stops.push(STATUS[k].hex+' '+a+'deg '+b+'deg');acc+=counts[k];}});
+  const size=n<10?40:n<25?46:52;
+  return L.divIcon({html:'<div style="background:conic-gradient('+stops.join(',')+');width:'+(size-6)+'px;height:'+(size-6)+'px"><span style="background:rgba(15,23,42,.8);border-radius:50%;width:'+(size-18)+'px;height:'+(size-18)+'px;display:grid;place-items:center">'+n+'</span></div>',className:'cl',iconSize:[size,size]});
+ }});
+map.addLayer(cluster);
+
+function iconFor(p,sel){
+ const cap=p.operating_capacity_mw||0; const s = p.status==='Operating'? Math.round(18+Math.min(14,cap/300)) : 16;
+ return L.divIcon({className:'',html:'<div class="pm'+(sel?' sel':'')+'" style="width:'+s+'px;height:'+s+'px;background:'+STATUS[p.status].hex+'">'+(p.num_units>1&&s>=20?p.num_units:'')+'</div>',iconSize:[s,s],iconAnchor:[s/2,s/2],popupAnchor:[0,-s/2]});
+}
+const markers = plants.map(p=>{
+ const m=L.marker([p.lat,p.lon],{icon:iconFor(p),title:p.name,riseOnHover:true,keyboard:true,alt:p.name});
+ m.plant=p;
+ m.bindTooltip('<b>'+esc(p.name)+'</b><br>'+esc(p.state)+' · '+esc(p.status),{direction:'top',offset:[0,-8]});
+ m.on('click',()=>select(p,false));
+ return m;
+});
+
+// legend with status toggles
+const active=new Set(Object.keys(STATUS));
+const legend=L.control({position:'topright'});
+legend.onAdd=function(){
+ const d=L.DomUtil.create('div','legend');
+ let h='<b class="lgh" role="button" tabindex="0">Plant status <span class="car">▾</span></b><div class="lgb">';
+ Object.keys(STATUS).forEach(k=>{const n=plants.filter(p=>p.status===k).length;
+  h+='<label><input type="checkbox" data-s="'+esc(k)+'" checked><span class="dot" style="background:'+STATUS[k].hex+'"></span>'+esc(k)+'<span class="n">'+n+'</span></label>';});
+ h+='<div class="note" style="margin-top:6px">Operating dot size ∝ capacity · number = reactor units</div></div>';
+ d.innerHTML=h; if(window.innerWidth<=720) d.classList.add('collapsed'); d.querySelector('.lgh').addEventListener('click',()=>d.classList.toggle('collapsed')); L.DomEvent.disableClickPropagation(d); L.DomEvent.disableScrollPropagation(d);
+ d.querySelectorAll('input').forEach(i=>i.addEventListener('change',()=>{i.checked?active.add(i.dataset.s):active.delete(i.dataset.s);applyFilters();}));
+ return d;};
+legend.addTo(map);
+
+const $search=document.getElementById('search'),$type=document.getElementById('ftype'),$count=document.getElementById('count');
+document.getElementById('plantlist').innerHTML=plants.map(p=>'<option value="'+esc(p.name)+'">'+esc(p.state)+' – '+esc(p.status)+'</option>').join('');
+function matches(p){
+ if(!active.has(p.status)) return false;
+ const t=$type.value;
+ if(t==='PWR'||t==='BWR'){ if(!p.reactor_types.includes(t)) return false; }
+ else if(t==='OTHER'){ if(p.reactor_types.every(x=>x==='PWR'||x==='BWR')) return false; }
+ const q=$search.value.trim().toLowerCase();
+ if(q){ const hay=[p.name,p.wiki_title,p.state,p.state_abbr,p.location,p.operator,p.owner].join(' ').toLowerCase(); if(!hay.includes(q)) return false; }
+ return true;
+}
+function applyFilters(){
+ cluster.clearLayers();
+ const vis=markers.filter(m=>matches(m.plant));
+ cluster.addLayers(vis);
+ const units=vis.reduce((a,m)=>a+m.plant.units.filter(u=>u.status==='Operational').length,0);
+ $count.textContent=vis.length+' of '+plants.length+' plants shown · '+units+' operating reactors';
+ return vis;
+}
+$type.addEventListener('change',applyFilters);
+let st;$search.addEventListener('input',()=>{clearTimeout(st);st=setTimeout(()=>{const vis=applyFilters();
+ const q=$search.value.trim().toLowerCase(); const exact=plants.find(p=>p.name.toLowerCase()===q);
+ if(exact) select(exact,true); else if(q&&vis.length&&vis.length<=12){ map.flyToBounds(L.latLngBounds(vis.map(m=>m.getLatLng())).pad(0.3),{maxZoom:9,duration:0.8}); }
+},250);});
+$search.addEventListener('keydown',e=>{if(e.key==='Enter'){const vis=markers.filter(m=>matches(m.plant)); if(vis.length) select(vis[0].plant,true);}});
+
+// panel
+const $panel=document.getElementById('panel'),$pbody=document.getElementById('pbody');
+let selected=null;
+document.getElementById('pclose').onclick=()=>{ $panel.classList.remove('open'); if(selected){selected.setIcon(iconFor(selected.plant));selected=null;} history.replaceState(null,'',location.pathname+location.search); };
+function fmtYearRange(p){ const a=p.first_construction_year,b=p.first_commercial_year; return b?String(b):(a?('Construction began '+a):''); }
+function unitHtml(u){
+ const rows=[['Reactor type',u.type?(u.type+(u.type_full?' – '+u.type_full:'')):''],['Vendor / design',[u.vendor,u.model].filter(Boolean).join(' · ')],['Containment',u.containment],['Net capacity',u.capacity_mw?u.capacity_mw+' MW':''],['Construction start',u.construction_start],['Commercial operation',u.commercial_operation],['Closed',u.closed]];
+ if(u.license_expires_year) rows.push(['License expires*',String(u.license_expires_year)+(u.license_expires_year<=2027?' (renewal application pending as of Sep 2024)':'')]);
+ if(u.nrc_license) rows.push(['NRC license / docket',u.nrc_license+' / '+u.docket]);
+ const bg=UNIT_COLORS[u.status]||(/Unfinished|Cancel/.test(u.status)?'#ede9fe':'#fee2e2');
+ return '<div class="unit"><div class="uh"><span>'+esc(u.nrc_name||('Unit '+u.unit))+'</span><span class="us" style="background:'+bg+'">'+esc(u.status)+'</span></div><table>'+rows.filter(r=>r[1]).map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('')+'</table></div>';
+}
+function render(p){
+ const s=STATUS[p.status];
+ const img=p.image?'<div class="ph"><img src="'+esc(p.image.url)+'" alt="'+esc(p.name)+'" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.innerHTML=\'<div class=ph-empty>Photo unavailable</div>\'"></div><div class="credit">Photo: <a href="'+esc(p.image.commons)+'" target="_blank" rel="noopener">'+esc(p.image.artist||p.image.file)+'</a> · '+esc(p.image.license)+' · via Wikimedia Commons</div>'
+  :'<div class="ph"><div class="ph-empty">☢<br>No freely licensed photo found</div></div>';
+ const caps=p.units.map(u=>parseFloat(String(u.capacity_mw).replace(/,/g,''))).filter(x=>!isNaN(x));
+ const totalCap=caps.reduce((a,b)=>a+b,0);
+ const facts=[
+  ['First commercial operation',p.first_commercial_year||'—'],
+  ['Construction began',p.first_construction_year||'—'],
+  ['Reactor technology',p.reactor_types.join(' + ')||'—'],
+  [p.status==='Operating'?'Operating capacity':'Total unit capacity',(p.status==='Operating'?(p.operating_capacity_mw||0):Math.round(totalCap))?((p.status==='Operating'?p.operating_capacity_mw:Math.round(totalCap)).toLocaleString()+' MW'):'—']
+ ];
+ const vendors=[...new Set(p.units.map(u=>u.vendor).filter(Boolean))];
+ const nrcLoc=(p.units.find(u=>u.nrc_location)||{}).nrc_location;
+ $pbody.innerHTML=img+'<div class="pc">'+
+  '<span class="badge" style="background:'+s.hex+'">'+esc(p.status)+'</span>'+(p.reactor_types||[]).map(t=>'<span class="tag">'+esc(t)+'</span>').join('')+vendors.map(v=>'<span class="tag">'+esc(v)+'</span>').join('')+
+  '<h2>'+esc(p.wiki_title||p.name)+'</h2><div class="sub">'+esc(p.location||p.state)+'</div>'+
+  '<div class="facts">'+facts.map(f=>'<div class="fact"><div class="k">'+esc(f[0])+'</div><div class="v">'+esc(f[1])+'</div></div>').join('')+'</div>'+
+  (p.description?'<div class="desc">'+esc(p.description)+'</div>':'')+
+  '<h3>Plant details</h3><table class="kv">'+
+   [['State',p.state],['Location',p.location],['NRC location',nrcLoc],['Operator',p.operator],['Owner',p.owner],['Reactor units',String(p.num_units)],['Cooling water source',p.cooling_source],['Coordinates',p.lat.toFixed(4)+', '+p.lon.toFixed(4)]]
+   .map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+val(r[1])+'</td></tr>').join('')+'</table>'+
+  '<h3>Reactor units ('+p.units.length+')</h3>'+p.units.map(unitHtml).join('')+
+  '<div class="links">'+(p.wikipedia?'<a href="'+esc(p.wikipedia)+'" target="_blank" rel="noopener">Wikipedia article ↗</a>':'')+
+  '<a href="https://en.wikipedia.org/wiki/List_of_commercial_nuclear_reactors#United_States" target="_blank" rel="noopener">Reactor list ↗</a>'+
+  (p.units.some(u=>u.docket)?'<a href="https://www.nrc.gov/reactors/operating/list-power-reactor-units.html" target="_blank" rel="noopener">NRC reactor list ↗</a>':'')+
+  '<a href="https://www.google.com/maps/search/?api=1&query='+p.lat+','+p.lon+'" target="_blank" rel="noopener">Open in Google Maps ↗</a></div>'+
+  (p.units.some(u=>u.license_expires_year)?'<p class="note">* License expiration year from the NRC Information Digest 2024–2025 (data as of Sep 2024); some licenses have since been renewed or are in renewal.</p>':'')+
+  '</div>';
+ $pbody.scrollTop=0;
+}
+function select(p,fly){
+ const m=markers.find(x=>x.plant===p); if(!m) return;
+ if(!matches(p)){ $search.value=''; active.add(p.status); document.querySelectorAll('.legend input').forEach(i=>{if(i.dataset.s===p.status)i.checked=true;}); $type.value=''; applyFilters(); }
+ if(selected&&selected!==m) selected.setIcon(iconFor(selected.plant));
+ selected=m; m.setIcon(iconFor(p,true));
+ render(p); $panel.classList.add('open');
+ history.replaceState(null,'','#'+p.id);
+ if(fly){ const z=Math.max(map.getZoom(),12); const mobile=window.innerWidth<=720;
+  const off=mobile?L.point(0,$panel.offsetHeight/2):L.point($panel.offsetWidth/2,0);
+  const c=map.unproject(map.project([p.lat,p.lon],z).add(off),z); map.flyTo(c,z,{duration:1.0}); }
+}
+window.selectPlant=id=>{const p=plants.find(x=>x.id===id); if(p) select(p,true);};
+
+// about box
+const meta=window.PLANT_META||{sources:[]};
+document.getElementById('aboutBox').innerHTML='<b>About this map</b><br>'+plants.length+' US commercial nuclear power plant sites (operating, restarting, planned, shut down and never-completed). Click a dot for details. Statuses and unit data reflect the sources as of '+esc(meta.generated)+'.<br><br><b>Sources</b><ul style="padding-left:18px;margin:4px 0">'+meta.sources.map(s=>'<li><a href="'+esc(s.url)+'" target="_blank" rel="noopener">'+esc(s.name)+'</a></li>').join('')+'</ul><span class="note">Photos are freely licensed images from Wikimedia Commons; credit and license shown under each photo. Not an official government product.</span>';
+document.getElementById('aboutBtn').onclick=e=>{e.stopPropagation();document.getElementById('aboutBox').classList.toggle('show');};
+map.on('click',()=>document.getElementById('aboutBox').classList.remove('show'));
+
+applyFilters();
+if(location.hash.length>1){ setTimeout(()=>window.selectPlant(decodeURIComponent(location.hash.slice(1))),300); }
+document.addEventListener('keydown',e=>{if(e.key==='Escape') document.getElementById('pclose').click();});
+})();
+</script>
+</body>
+</html>
