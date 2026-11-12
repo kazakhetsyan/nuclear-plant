@@ -179,6 +179,10 @@ h3:after{content:"";flex:1;height:1px;background:var(--line)}
 /* about */
 #about{position:absolute;left:12px;bottom:28px;z-index:900;animation:fade .8s var(--ease) both .7s}
 #about button{font:inherit;font-size:12.5px;font-weight:500;color:var(--ink2);border-radius:999px;padding:7px 14px;cursor:pointer;transition:color .2s,border-color .2s,transform .3s var(--ease)}
+#about{display:flex;gap:8px;align-items:center}
+#about .xlink{font-size:12.5px;font-weight:500;color:var(--ink2);border-radius:999px;padding:7px 14px;text-decoration:none;white-space:nowrap;transition:color .2s,border-color .2s,transform .3s var(--ease)}
+#about .xlink:hover{color:var(--accent);border-color:var(--accent-line);transform:translateY(-1px)}
+@media (max-width:720px){#about .xl{display:none}}
 #about button:hover{color:var(--accent);border-color:var(--accent-line);transform:translateY(-1px)}
 #aboutBox{position:absolute;left:0;bottom:44px;width:340px;max-width:calc(100vw - 24px);border-radius:var(--r-md);padding:14px 16px;font-size:12.5px;line-height:1.6;color:var(--ink2);
  background:var(--glass-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:1px solid var(--line2);box-shadow:var(--sh-3);
@@ -229,7 +233,7 @@ h3:after{content:"";flex:1;height:1px;background:var(--line)}
  </header>
   <div id="map"></div>
   <aside id="panel" aria-live="polite"><div class="grab" id="pgrab" aria-hidden="true"></div><button class="close" id="pclose" aria-label="Close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button><div id="pbody"></div></aside>
-  <div id="about"><button id="aboutBtn" class="glass">About &amp; sources</button><div id="aboutBox"></div></div>
+  <div id="about"><button id="aboutBtn" class="glass">About &amp; sources</button><a class="glass xlink" href="planes/" title="Live map of the planes flying near you">✈ Planes<span class="xl"> nearby</span></a><div id="aboutBox"></div></div>
  </div>
 </div>
 <script src="vendor/leaflet.js"></script>
