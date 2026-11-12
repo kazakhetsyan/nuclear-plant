@@ -6,7 +6,7 @@ Files
 - `index.html` – the map app (search, reactor-type filter, status toggles in the legend, detail panel, deep links like `index.html#vogtle`)
 - `data.js` – the embedded dataset (`window.PLANTS`), 90 plant sites / 148 reactor units
 - `plants.json` – the same data as plain JSON
-- `screenshots/*.png` – preview images (`screenshot.png`, `screenshot-details.png`, `screenshot-mobile.png`, `screenshot-units.png`)
+- `screenshots/*.png` – preview images (`screenshot.png`, `screenshot-details.png`, `screenshot-elkriver.png`, `screenshot-mobile.png`, `screenshot-waterford.png`)
 
 Data sources (pulled 2026-11-12)
 - Wikipedia, "List of commercial nuclear reactors" (United States section): unit type, model, status, net MW, construction start, commercial operation, and closure dates

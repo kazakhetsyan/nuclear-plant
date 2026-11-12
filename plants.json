@@ -5116,7 +5116,13 @@
   "cooling_source": "Mississippi River",
   "description": "The Waterford Steam Electric Station, Unit 3, also known as Waterford 3, is a nuclear power plant located on a 3,000-acre (1,200 ha) plot in Killona, Louisiana, in St. Charles Parish, about 25 miles (40 km) west of New Orleans.\nThis plant has one Combustion Engineering two-loop pressurized water reactor. The plant has a maximum dependable capacity of 1,152 megawatts of electricity.",
   "wikipedia": "https://en.wikipedia.org/wiki/Waterford_Nuclear_Generating_Station",
-  "image": null,
+  "image": {
+   "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7f/Sea_Grant_-_Waterford.3.jpg/960px-Sea_Grant_-_Waterford.3.jpg",
+   "commons": "https://commons.wikimedia.org/wiki/File:Sea_Grant_-_Waterford.3.jpg",
+   "license": "CC BY 2.0",
+   "artist": "Louisiana Sea Grant",
+   "file": "Sea Grant - Waterford.3.jpg"
+  },
   "units": [
    {
     "unit": "1",
