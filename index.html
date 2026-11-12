@@ -358,13 +358,29 @@ function satUrl(p){
  const hw=SAT_GROUND_M/2/Math.cos(lat*Math.PI/180), hh=hw*600/960;
  return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox='+[x-hw,y-hh,x+hw,y+hh].map(v=>v.toFixed(1)).join(',')+'&bboxSR=3857&imageSR=3857&size=960,600&format=jpg&f=image';
 }
-function satHtml(p){
- return '<div class="ph sat"><img src="'+esc(satUrl(p))+'" alt="Satellite view of the '+esc(p.name)+' site" decoding="async" referrerpolicy="no-referrer" onload="this.parentNode.classList.add(\'loaded\')" onerror="this.parentNode.classList.add(\'loaded\');this.parentNode.innerHTML=\'<div class=ph-empty><span class=i>☢</span>No freely licensed photo found</div>\'"><span class="satpin"></span><span class="satlbl">Satellite view</span></div>'+
-  '<div class="credit">Satellite view · Imagery © Esri, Maxar, Earthstar Geographics · no freely licensed photo of this plant found</div>';
+function satHtml(p,fallback){
+ const msg=fallback?'Photo unavailable':'No freely licensed photo found';
+ return '<div class="ph sat"><img src="'+esc(satUrl(p))+'" alt="Satellite view of the '+esc(p.name)+' site" decoding="async" referrerpolicy="no-referrer" onload="this.parentNode.classList.add(\'loaded\')" onerror="this.parentNode.classList.add(\'loaded\');this.parentNode.innerHTML=\'<div class=ph-empty><span class=i>☢</span>'+msg+'</div>\'"><span class="satpin"></span><span class="satlbl">Satellite view</span></div>'+
+  '<div class="credit">Satellite view · Imagery © Esri, Maxar, Earthstar Geographics'+(fallback?' · the plant photo could not be loaded':' · no freely licensed photo of this plant found')+'</div>';
+}
+// photo loading: Wikimedia thumbnail -> original file (served without thumbnail rendering) -> satellite view
+function originalOf(u){ const m=/^(https:\/\/upload\.wikimedia\.org\/wikipedia\/commons)\/thumb\/(.+?)\/\d+px-[^\/]+$/.exec(u||''); return m?m[1]+'/'+m[2]:''; }
+function wirePhoto(p){
+ const img=$pbody.querySelector('img.photo'); if(!img) return;
+ const ph=img.parentNode; let alt=originalOf(img.src);
+ const ok=()=>ph.classList.add('loaded');
+ const fail=()=>{
+  if(alt){ const a=alt; alt=''; img.src=a; return; }
+  if(!ph.isConnected) return;
+  const credit=ph.nextElementSibling, tmp=document.createElement('div'); tmp.innerHTML=satHtml(p,true);
+  ph.replaceWith(tmp.firstElementChild); if(credit&&credit.classList.contains('credit')) credit.replaceWith(tmp.lastElementChild);
+ };
+ img.addEventListener('load',ok); img.addEventListener('error',fail);
+ if(img.complete){ if(img.naturalWidth) ok(); else fail(); }
 }
 function render(p){
  const s=STATUS[p.status];
- const img=p.image?'<div class="ph"><img src="'+esc(p.image.url)+'" alt="'+esc(p.name)+'" decoding="async" referrerpolicy="no-referrer" onload="this.parentNode.classList.add(\'loaded\')" onerror="this.parentNode.classList.add(\'loaded\');this.parentNode.innerHTML=\'<div class=ph-empty><span class=i>☢</span>Photo unavailable</div>\'"></div><div class="credit">Photo: <a href="'+esc(p.image.commons)+'" target="_blank" rel="noopener">'+esc(p.image.artist||p.image.file)+'</a> · '+esc(p.image.license)+' · via Wikimedia Commons</div>'
+ const img=p.image?'<div class="ph"><img class="photo" src="'+esc(p.image.url)+'" alt="'+esc(p.name)+'" decoding="async"></div><div class="credit">Photo: <a href="'+esc(p.image.commons)+'" target="_blank" rel="noopener">'+esc(p.image.artist||p.image.file)+'</a> · '+esc(p.image.license)+' · via Wikimedia Commons</div>'
   :satHtml(p);
  const caps=p.units.map(u=>parseFloat(String(u.capacity_mw).replace(/,/g,''))).filter(x=>!isNaN(x));
  const totalCap=caps.reduce((a,b)=>a+b,0);
@@ -391,6 +407,7 @@ function render(p){
   '<a href="https://www.google.com/maps/search/?api=1&query='+p.lat+','+p.lon+'" target="_blank" rel="noopener">Open in Google Maps ↗</a></div>'+
   (p.units.some(u=>u.license_expires_year)?'<p class="note">* License expiration year from the NRC Information Digest 2024–2025 (data as of Sep 2024); some licenses have since been renewed or are in renewal.</p>':'')+
   '</div>';
+ wirePhoto(p);
  $pbody.querySelectorAll('[data-mw]').forEach(el=>{el.dataset.n=0;countUp(el,+el.dataset.mw,' MW',1100);});
  $pbody.scrollTop=0; $pbody.classList.remove('swap'); void $pbody.offsetWidth; $pbody.classList.add('swap');
 }
