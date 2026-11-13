@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>World Nuclear Weapons – Open-Source Map</title>
+<meta name="description" content="Map of the world’s nuclear weapons from public estimates: stockpiles of the nine nuclear-armed states (FAS, SIPRI 2026), publicly identified bases, NATO host countries, historic test sites and the global stockpile since 1945.">
+<meta name="theme-color" content="#07090d">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&display=swap">
+<link rel="stylesheet" href="../vendor/leaflet.css">
+<link rel="stylesheet" href="weapons.css?v=20261112c">
+</head>
+<body class="intro">
+<div id="app"><div id="main">
+ <header class="glass">
+  <h1><span class="sym" aria-hidden="true">✸</span>Nuclear Weapons<span class="h1s"> · open-source map</span></h1>
+  <div class="controls">
+   <label class="field"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="Search a base, test site or country…" autocomplete="off" spellcheck="false" list="qlist" aria-label="Search sites and countries" enterkeyhint="search"></label>
+   <datalist id="qlist"></datalist>
+   <select id="ftype" aria-label="Filter by site type"><option value="">All site types</option></select>
+   <select id="fcountry" aria-label="Filter by country"><option value="">All countries</option></select>
+   <button id="statsBtn" class="hbtn" type="button" aria-label="Statistics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg><span>Stats</span></button>
+   <button id="histBtn" class="hbtn" type="button" aria-label="Stockpile history chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-6 4 3 4-7 5 5"/><path d="M3 21h18"/></svg><span>History</span></button>
+   <div id="count" aria-live="polite"></div>
+  </div>
+ </header>
+ <div id="map" role="application" aria-label="Map of nuclear weapons sites and nuclear-armed states"></div>
+ <aside id="panel" aria-label="Details"><div class="grab" id="pgrab"></div><button class="close" id="pclose" type="button" aria-label="Close">✕</button><div id="pbody"></div></aside>
+ <section id="ov" class="glass" role="dialog" aria-modal="false" aria-label="Statistics and history">
+  <div class="ovh"><div class="tabs" role="tablist"><button type="button" role="tab" data-tab="stats">Stats</button><button type="button" role="tab" data-tab="hist">History 1945–2026</button></div><button class="close" id="ovclose" type="button" aria-label="Close">✕</button></div>
+  <div id="ovbody"></div>
+ </section>
+ <div id="about"><button id="aboutBtn" class="glass" type="button">About &amp; sources</button><a class="glass xlink" href="../" title="World nuclear power plants map">☢ <span class="xs">Plants</span><span class="xl">Power plants</span></a><a class="glass xlink" href="../planes/" title="Live map of the planes flying near you">✈ Planes<span class="xl"> nearby</span></a><div id="aboutBox"></div></div>
+ <div id="toast" role="status" aria-live="polite"></div>
+</div></div>
+<script src="../vendor/leaflet.js"></script>
+<script>
+// Leaflet fallback (same CDN version as the other maps) if the self-hosted copy fails
+if(!window.L){document.write('<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>');}
+</script>
+<script src="data.js?v=20261112c" defer></script>
+<script src="countries.js?v=20261112c" defer></script>
+<script src="app.js?v=20261112c" defer></script>
+</body>
+</html>

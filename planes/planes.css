@@ -214,3 +214,5 @@ h3:after{content:"";flex:1;height:1px;background:var(--line)}
  .xl{display:none}
  .pc{padding:12px 16px 28px}
 }
+
+@media (max-width:640px){.leaflet-bottom.leaflet-right .leaflet-control-scale{margin-bottom:46px}}
